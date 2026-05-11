@@ -1,0 +1,76 @@
+// lib/controller/transaction_controller.dart
+import 'package:flutter/foundation.dart';
+import '../data/transaction_db.dart';
+import '../data/transaction_model.dart';
+
+class TransactionController extends ChangeNotifier {
+  List<Transaction> _transactions = [];
+
+  List<Transaction> get transactions => _transactions;
+
+  void load() {
+    _transactions = TransactionDB.getAll();
+    notifyListeners();
+  }
+
+  Future<void> add(Transaction t) async {
+    await TransactionDB.add(t);
+    load();
+  }
+
+  Future<bool> update(Transaction t) async {
+    if (!t.isEditable) return false;
+    t.amount = t.amount;
+    await TransactionDB.update(t);
+    load();
+    return true;
+  }
+
+  Future<bool> delete(String id) async {
+    final t = _transactions.firstWhere((e) => e.id == id, orElse: () => throw Exception('Not found'));
+    if (!t.isEditable) return false;
+    await TransactionDB.delete(id);
+    load();
+    return true;
+  }
+
+  // Group by category
+  Map<String, List<Transaction>> get byCategory {
+    final map = <String, List<Transaction>>{};
+    for (final t in _transactions) {
+      map.putIfAbsent(t.category, () => []).add(t);
+    }
+    return map;
+  }
+
+  // Summary
+  double get totalincome => _transactions
+      .where((t) => t.type == TransactionType.income)
+      .fold(0, (s, t) => s + t.amount);
+
+  double get totalexpense => _transactions
+      .where((t) => t.type == TransactionType.expense)
+      .fold(0, (s, t) => s + t.amount);
+
+  double get totalPending => _transactions
+      .where((t) => t.type == TransactionType.pending)
+      .fold(0, (s, t) => s + t.amount);
+
+  double get net => totalincome - totalexpense;
+
+  // Daily data for chart (last 7 days)
+  List<Map<String, dynamic>> get weeklyData {
+    final now = DateTime.now();
+    return List.generate(7, (i) {
+      final day = DateTime(now.year, now.month, now.day - (6 - i));
+      final dayTxns = _transactions.where((t) =>
+        t.createdAt.year == day.year &&
+        t.createdAt.month == day.month &&
+        t.createdAt.day == day.day,
+      );
+      final income = dayTxns.where((t) => t.type == TransactionType.income).fold(0.0, (s, t) => s + t.amount);
+      final expense = dayTxns.where((t) => t.type == TransactionType.expense).fold(0.0, (s, t) => s + t.amount);
+      return {'day': day, 'income': income, 'expense': expense};
+    });
+  }
+}
