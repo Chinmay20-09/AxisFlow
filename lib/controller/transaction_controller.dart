@@ -72,32 +72,46 @@ List<Transaction> get pendingTransactions =>
   double get net => totalincome - totalexpense;
 
   // Daily data for chart (last 7 days)
-  List<Map<String, dynamic>> get weeklyData {
-    final now = DateTime.now();
-    return List.generate(7, (i) {
-      final day = DateTime(now.year, now.month, now.day - (6 - i));
-      final dayTxns = _transactions.where((t) =>
-        t.createdAt.year == day.year &&
-        t.createdAt.month == day.month &&
-        t.createdAt.day == day.day,
-      );
-     final income = dayTxns
-    .where((t) =>
-        t.type == TransactionType.income &&
-        t.state == TransactionState.completed)
-    .fold(0.0, (s, t) => s + t.amount);
+ List<Map<String, dynamic>> get weeklyData {
 
-final expense = dayTxns
-    .where((t) =>
-        t.type == TransactionType.expense &&
-        t.state == TransactionState.completed)
-    .fold(0.0, (s, t) => s + t.amount);
+  final now = DateTime.now();
 
-return {
-  'day': day,
-  'income': income,
-  'expense': expense,
-};
-    });
-  }
+  // Monday of current week
+  final startOfWeek =
+      now.subtract(Duration(days: now.weekday - 1));
+
+  return List.generate(7, (i) {
+
+    final day = DateTime(
+      startOfWeek.year,
+      startOfWeek.month,
+      startOfWeek.day + i,
+    );
+
+    final dayTxns = _transactions.where(
+      (t) =>
+          t.createdAt.year == day.year &&
+          t.createdAt.month == day.month &&
+          t.createdAt.day == day.day,
+    );
+
+    final income = dayTxns
+        .where((t) =>
+            t.type == TransactionType.income &&
+            t.state == TransactionState.completed)
+        .fold(0.0, (s, t) => s + t.amount);
+
+    final expense = dayTxns
+        .where((t) =>
+            t.type == TransactionType.expense &&
+            t.state == TransactionState.completed)
+        .fold(0.0, (s, t) => s + t.amount);
+
+    return {
+      'day': day,
+      'income': income,
+      'expense': expense,
+    };
+  });
+}
 }

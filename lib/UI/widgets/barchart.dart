@@ -22,7 +22,7 @@ class barchart extends StatelessWidget {
         ),
         child: Row(
           children: const [
-            Icon(Icons.show_chart, color: AppTheme.textSecondary),
+            Icon(Icons.bar_chart_rounded, color: AppTheme.textSecondary),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -67,7 +67,7 @@ class barchart extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
-                  Icons.show_chart,
+                  Icons.bar_chart_rounded,
                   size: 16,
                   color: AppTheme.income,
                 ),

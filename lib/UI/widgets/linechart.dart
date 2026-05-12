@@ -22,7 +22,7 @@ class linechart extends StatelessWidget {
         ),
         child: const Row(
           children: [
-            Icon(Icons.show_chart, color: AppTheme.textSecondary),
+            Icon(Icons.auto_graph, color: AppTheme.textSecondary),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -59,6 +59,25 @@ class linechart extends StatelessWidget {
       child:Column(
   crossAxisAlignment: CrossAxisAlignment.start,
   children: [
+    Row(
+  children: [
+
+    Container(
+      padding: const EdgeInsets.all(6),
+
+      decoration: BoxDecoration(
+        color: AppTheme.income.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(10),
+      ),
+
+      child: const Icon(
+        Icons.auto_graph,
+        size: 16,
+        color: AppTheme.income,
+      ),
+    ),
+
+    const SizedBox(width: 10),
 
     const Text(
       'LAST 7 DAYS',
@@ -69,6 +88,8 @@ class linechart extends StatelessWidget {
         fontWeight: FontWeight.w600,
       ),
     ),
+  ],
+),
     SingleChildScrollView(
   scrollDirection: Axis.horizontal,
   child: Row(
@@ -80,8 +101,10 @@ class linechart extends StatelessWidget {
       const SizedBox(width: 14),
 
       _legend('Pending', AppTheme.pending),
+
     ],
   ),
+
 ),
   
     const SizedBox(height: 20),
@@ -193,7 +216,7 @@ class linechart extends StatelessWidget {
               ),
             ),
           ),
-        ],
+  ],
       ),
     );
   }
@@ -229,9 +252,33 @@ class linechart extends StatelessWidget {
   }
 
   List<FlSpot> _toSpots(String key) {
-    return List.generate(data.length, (i) {
-      return FlSpot(i.toDouble(), (data[i][key] as double));
-    });
+    final today = DateTime.now();
+    final spots = <FlSpot>[];
+
+    for (int i = 0; i < data.length; i++) {
+      final chartDay = data[i]['day'] as DateTime;
+
+final isFuture =
+    chartDay.isAfter(
+      DateTime(
+        today.year,
+        today.month,
+        today.day,
+      ),
+    );
+
+
+if (!isFuture) {
+  spots.add(
+    FlSpot(
+      i.toDouble(),
+      data[i][key] as double,
+      
+    ),
+  );
+}
+    }
+    return spots;
   }
 
   List<FlSpot> _toNetSpots() {

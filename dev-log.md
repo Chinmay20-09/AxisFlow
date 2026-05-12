@@ -33,11 +33,11 @@ dev-log.md
 [May 12]
 
 ✔ Refactored pending from type → transaction state
-✔ Improved chart interaction persistence
-✔ Fixed responsive layout issues
+X Improved chart interaction persistence
+X Fixed responsive layout issues
 
 🧠 Insight:
 Pending is a status, not a transaction direction.
 
 📌 Next:
-Expandable transaction tile
+chart interaction,UI, remove pending and add net in line chart and add a quick section to either complete/foreit pending transaction(mainly in category)
