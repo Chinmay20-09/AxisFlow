@@ -45,16 +45,29 @@ class TransactionController extends ChangeNotifier {
 
   // Summary
   double get totalincome => _transactions
-      .where((t) => t.type == TransactionType.income)
-      .fold(0, (s, t) => s + t.amount);
-
+    .where((t) =>
+        t.type == TransactionType.income &&
+        t.state == TransactionState.completed)
+    .fold(0.0, (s, t) => s + t.amount);
   double get totalexpense => _transactions
-      .where((t) => t.type == TransactionType.expense)
-      .fold(0, (s, t) => s + t.amount);
+      .where((t) =>
+          t.type == TransactionType.expense &&
+          t.state == TransactionState.completed)
+      .fold(0.0, (s, t) => s + t.amount);
+  double get totalPending {
+  return _transactions
+      .where((t) => t.state == TransactionState.pending)
+      .fold(0.0, (sum, t) => sum + t.amount);
+}
+List<Transaction> get completedTransactions =>
+    _transactions
+        .where((t) => t.state == TransactionState.completed)
+        .toList();
+List<Transaction> get pendingTransactions =>
+    _transactions
+        .where((t) => t.state == TransactionState.pending)
+        .toList();
 
-  double get totalPending => _transactions
-      .where((t) => t.type == TransactionType.pending)
-      .fold(0, (s, t) => s + t.amount);
 
   double get net => totalincome - totalexpense;
 
@@ -68,9 +81,23 @@ class TransactionController extends ChangeNotifier {
         t.createdAt.month == day.month &&
         t.createdAt.day == day.day,
       );
-      final income = dayTxns.where((t) => t.type == TransactionType.income).fold(0.0, (s, t) => s + t.amount);
-      final expense = dayTxns.where((t) => t.type == TransactionType.expense).fold(0.0, (s, t) => s + t.amount);
-      return {'day': day, 'income': income, 'expense': expense};
+     final income = dayTxns
+    .where((t) =>
+        t.type == TransactionType.income &&
+        t.state == TransactionState.completed)
+    .fold(0.0, (s, t) => s + t.amount);
+
+final expense = dayTxns
+    .where((t) =>
+        t.type == TransactionType.expense &&
+        t.state == TransactionState.completed)
+    .fold(0.0, (s, t) => s + t.amount);
+
+return {
+  'day': day,
+  'income': income,
+  'expense': expense,
+};
     });
   }
 }

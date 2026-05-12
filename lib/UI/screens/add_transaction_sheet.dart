@@ -8,44 +8,34 @@ import 'dart:math';
 
 // ignore: constant_identifier_names
 const List<String> k_inCategories = [
-  'Salary',
-  'Freelance',
-  'Business',
-  'Investment',
-  'Gift',
-  'Refund',
-  'Bonus',
-  'Rental',
-  'Scholarship',
-  'Other',
+  'Salary 💰',
+  'Freelance 💻',
+  'Business 🏢',
+  'Investment 💼',
+  'Gift 🎁',
+  'Refund 💸',
+  'Bonus 🎉',
+  'Rental 🏠',
+  'Scholarship 🎓',
+  'Other 🔄',
 ];
 
 // ignore: constant_identifier_names
 const List<String> k_exCategories = [
-  'Food',
-  'Transport',
-  'Bills',
-  'Shopping',
-  'Health',
-  'Education',
-  'Entertainment',
-  'Travel',
-  'Subscription',
-  'Rent',
-  'EMI',
-  'Family',
-  'Personal',
-  'Other',
-];
-
-// ignore: constant_identifier_names
-const List<String> k_peCategories = [
-  'Borrowed',
-  'Lent',
-  'Awaiting Payment',
-  'Pending Salary',
-  'Subscription Due',
-  'Other',
+  'Food 🍽️',
+  'Transport 🚗',
+  'Bills 💳',
+  'Shopping 🛍️',
+  'Health 🏥',
+  'Education 📚',
+  'Entertainment 🎬',
+  'Travel 🌍',
+  'Subscription 💳',
+  'Rent 🏠',
+  'EMI 💸',
+  'Family 👨‍👩‍👧‍👦',
+  'Personal 🧑',
+  'Other 🔄'
 ];
 
 class AddTransactionSheet extends StatefulWidget {
@@ -69,6 +59,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   TransactionType _type = TransactionType.income;
   late String _category;
   bool _saving = false;
+  bool _isPending = false;
 
   bool get _canSave {
     final value = double.tryParse(_amountCtrl.text.trim());
@@ -85,6 +76,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       _noteCtrl.text = e.note;
       _type = e.type;
       _category = e.category;
+      _isPending = e.state == TransactionState.pending;
     }
   }
 
@@ -94,8 +86,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         return k_inCategories;
       case TransactionType.expense:
         return k_exCategories;
-      case TransactionType.pending:
-        return k_peCategories;
     }
   }
 
@@ -148,7 +138,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Save your income, expense or pending items quickly.',
+                      'Save your income, expense quickly and easily',
                       style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 12,
@@ -272,6 +262,25 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
           ),
           const SizedBox(height: 14),
 
+          CheckboxListTile(
+          value: _isPending,
+          onChanged: (v) {
+          setState(() {
+            _isPending = v ?? false;
+          });
+        },
+          activeColor: AppTheme.typeColor(_type),
+          contentPadding: EdgeInsets.zero,
+          title: const Text(
+          'Mark as Pending',
+          style: TextStyle(
+          color: AppTheme.textPrimary,
+          fontWeight: FontWeight.w600,
+    ),
+  ),
+),
+const SizedBox(height: 10),
+
           DropdownButtonFormField<String>(
             initialValue: _category,
             dropdownColor: AppTheme.surfaceAlt,
@@ -332,6 +341,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       t.type = _type;
       t.note = _noteCtrl.text.trim();
       t.category = _category;
+      t.state = _isPending
+    ? TransactionState.pending
+    : TransactionState.completed;
       await widget.controller.update(t);
     } else {
       final t = Transaction(
@@ -341,6 +353,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         note: _noteCtrl.text.trim(),
         category: _category,
         createdAt: DateTime.now(),
+        state: _isPending
+    ? TransactionState.pending
+    : TransactionState.completed,
       );
       await widget.controller.add(t);
     }
@@ -365,8 +380,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         return '↓';
       case TransactionType.expense:
         return '↑';
-      case TransactionType.pending:
-        return '⏳';
     }
   }
 

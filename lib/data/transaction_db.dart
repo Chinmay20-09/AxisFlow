@@ -10,6 +10,7 @@ class TransactionDB {
     await Hive.initFlutter();
     Hive.registerAdapter(TransactionTypeAdapter());
     Hive.registerAdapter(TransactionAdapter());
+    Hive.registerAdapter(TransactionStateAdapter());
     _box = await Hive.openBox<Transaction>(_boxName);
   }
 

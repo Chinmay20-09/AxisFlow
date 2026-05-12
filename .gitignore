@@ -43,3 +43,74 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Coverage report
+coverage/
+
+# Environment variables and sensitive files
+.env
+.env.local
+.env.production
+.env.staging
+secrets.json
+config.json
+*.key
+*.pem
+*.crt
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Key files
+android/key.properties
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+
+# Local properties (may contain sensitive paths)
+local.properties
+
+# Logs
+logs/
+*.log
+
+# Temp files
+tmp/
+*.tmp
+temp/
+*.temp
+
+# iOS
+ios/Pods/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# macOS
+macos/Flutter/ephemeral/
+
+# Windows
+windows/flutter/ephemeral/
+
+# Linux
+linux/flutter/ephemeral/
+
+# Web
+web/build/
+web/.dart_tool/
+
+# Native assets
+native_assets/
+
+# Firebase (additional)
+google-services.json
+GoogleService-Info.plist
+
+# Other sensitive
+private_key.pem
+certificate.crt
+api_keys.json

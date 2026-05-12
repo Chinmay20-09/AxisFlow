@@ -1,13 +1,14 @@
-// lib/ui/widgets/bar_chart.dart
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../app_theme.dart';
 
-class Bar_Chart extends StatelessWidget {
+// ignore: camel_case_types
+class barchart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
 
-  const Bar_Chart({super.key, required this.data});
+  const barchart({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {

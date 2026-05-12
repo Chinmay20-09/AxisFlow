@@ -9,8 +9,6 @@ enum TransactionType {
   income,
   @HiveField(1)
   expense,
-  @HiveField(2)
-  pending,
 }
 
 @HiveType(typeId: 1)
@@ -33,6 +31,9 @@ class Transaction extends HiveObject {
   @HiveField(5)
   DateTime createdAt;
 
+  @HiveField(6)
+  TransactionState state;
+
   Transaction({
     required this.id,
     required this.amount,
@@ -40,11 +41,14 @@ class Transaction extends HiveObject {
     required this.note,
     required this.category,
     required this.createdAt,
+    required this.state,
   });
 
   bool get isEditable {
-    return DateTime.now().difference(createdAt).inMinutes < 60;
-  }
+  if (state == TransactionState.pending) return true;
+
+  return DateTime.now().difference(createdAt).inMinutes < 60;
+}
 
   String get typeLabel {
     switch (type) {
@@ -52,12 +56,20 @@ class Transaction extends HiveObject {
         return 'income';
       case TransactionType.expense:
         return 'expense';
-      case TransactionType.pending:
-        return 'Pending';
     }
   }
 
   bool get isIncome => type == TransactionType.income;
   bool get isExpense => type == TransactionType.expense;
-  bool get isPending => type == TransactionType.pending;
+  
+}
+
+@HiveType(typeId: 2) 
+enum TransactionState {
+  @HiveField(0)
+  completed,
+  @HiveField(1)
+  pending,
+  @HiveField(2)
+  forfeited,
 }

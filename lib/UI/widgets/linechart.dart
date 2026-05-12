@@ -4,10 +4,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../app_theme.dart';
 
-class Line_Chart extends StatelessWidget {
+// ignore: camel_case_types
+class linechart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
 
-  const Line_Chart({super.key, required this.data});
+  const linechart({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -55,40 +56,35 @@ class Line_Chart extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppTheme.income.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.show_chart, size: 16, color: AppTheme.income),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'LAST 7 DAYS',
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 11,
-                  letterSpacing: 1.4,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              _legend('Income', AppTheme.income),
-              const SizedBox(width: 10),
-              _legend('Expense', AppTheme.expense),
-              const SizedBox(width: 10),
-              _legend('Net', AppTheme.pending),
-            ],
-          ),
+      child:Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
 
-          const SizedBox(height: 20),
+    const Text(
+      'LAST 7 DAYS',
+      style: TextStyle(
+        color: AppTheme.textSecondary,
+        fontSize: 13,
+        letterSpacing: 3,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+    SingleChildScrollView(
+  scrollDirection: Axis.horizontal,
+  child: Row(
+    children: [
+      _legend('Income', AppTheme.income),
+      const SizedBox(width: 14),
+
+      _legend('Expense', AppTheme.expense),
+      const SizedBox(width: 14),
+
+      _legend('Pending', AppTheme.pending),
+    ],
+  ),
+),
+  
+    const SizedBox(height: 20),
 
           SizedBox(
             height: 160,
@@ -118,6 +114,7 @@ class Line_Chart extends StatelessWidget {
                     tooltipBorderRadius: BorderRadius.circular(10),
                     fitInsideHorizontally: true,
                     fitInsideVertically: true,
+                    
                     getTooltipItems: (spots) {
                       final labels = ['Income', 'Expense', 'Net'];
                       final colors = [AppTheme.income, AppTheme.expense, AppTheme.pending];

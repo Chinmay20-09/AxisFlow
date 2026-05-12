@@ -1,41 +1,10 @@
-// lib/data/transaction_model.g.dart
-// GENERATED CODE - hand-written equivalent for Hive adapters
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'transaction_model.dart';
 
-class TransactionTypeAdapter extends TypeAdapter<TransactionType> {
-  @override
-  final int typeId = 0;
-
-  @override
-  TransactionType read(BinaryReader reader) {
-    switch (reader.readByte()) {
-      case 0:
-        return TransactionType.income;
-      case 1:
-        return TransactionType.expense;
-      case 2:
-        return TransactionType.pending;
-      default:
-        return TransactionType.income;
-    }
-  }
-
-  @override
-  void write(BinaryWriter writer, TransactionType obj) {
-    switch (obj) {
-      case TransactionType.income:
-        writer.writeByte(0);
-        break;
-      case TransactionType.expense:
-        writer.writeByte(1);
-        break;
-      case TransactionType.pending:
-        writer.writeByte(2);
-        break;
-    }
-  }
-}
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
 
 class TransactionAdapter extends TypeAdapter<Transaction> {
   @override
@@ -54,13 +23,14 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       note: fields[3] as String,
       category: fields[4] as String,
       createdAt: fields[5] as DateTime,
+      state: fields[6] as TransactionState,
     );
   }
 
   @override
   void write(BinaryWriter writer, Transaction obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -72,6 +42,101 @@ class TransactionAdapter extends TypeAdapter<Transaction> {
       ..writeByte(4)
       ..write(obj.category)
       ..writeByte(5)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(6)
+      ..write(obj.state);
   }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TransactionAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class TransactionTypeAdapter extends TypeAdapter<TransactionType> {
+  @override
+  final int typeId = 0;
+
+  @override
+  TransactionType read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return TransactionType.income;
+      case 1:
+        return TransactionType.expense;
+      default:
+        return TransactionType.income;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, TransactionType obj) {
+    switch (obj) {
+      case TransactionType.income:
+        writer.writeByte(0);
+        break;
+      case TransactionType.expense:
+        writer.writeByte(1);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TransactionTypeAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class TransactionStateAdapter extends TypeAdapter<TransactionState> {
+  @override
+  final int typeId = 2;
+
+  @override
+  TransactionState read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return TransactionState.completed;
+      case 1:
+        return TransactionState.pending;
+      case 2:
+        return TransactionState.forfeited;
+      default:
+        return TransactionState.completed;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, TransactionState obj) {
+    switch (obj) {
+      case TransactionState.completed:
+        writer.writeByte(0);
+        break;
+      case TransactionState.pending:
+        writer.writeByte(1);
+        break;
+      case TransactionState.forfeited:
+        writer.writeByte(2);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TransactionStateAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }

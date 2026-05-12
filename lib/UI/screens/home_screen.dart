@@ -4,17 +4,18 @@ import '../../controller/transaction_controller.dart';
 import '../../data/transaction_model.dart';
 import '../app_theme.dart';
 import '../widgets/summary_card.dart';
-import '../widgets/Bar_Chart.dart';
+import '../widgets/barchart.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction_sheet.dart';
 import 'category_screen.dart';
-import '../widgets/line_chart.dart';
+import '../widgets/linechart.dart';
 
 enum _ChartType { line, bar }
 
 class HomeScreen extends StatefulWidget {
   final TransactionController controller;
   const HomeScreen({super.key, required this.controller});
+
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -68,8 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _chartToggle(),
                 const SizedBox(height: 18),
                 _chartType == _ChartType.line
-                    ? Line_Chart(data: widget.controller.weeklyData)
-                    : Bar_Chart(data: widget.controller.weeklyData),
+                    ? linechart(data: widget.controller.weeklyData)
+                    : barchart(data: widget.controller.weeklyData),
                 const SizedBox(height: 18),
                 _filterChips(txns),
                 const SizedBox(height: 20),
@@ -227,7 +228,6 @@ class _HomeScreenState extends State<HomeScreen> {
       null,
       TransactionType.income,
       TransactionType.expense,
-      TransactionType.pending,
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

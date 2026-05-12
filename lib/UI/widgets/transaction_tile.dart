@@ -177,8 +177,6 @@ class TransactionTile extends StatelessWidget {
         return '↓';
       case TransactionType.expense:
         return '↑';
-      case TransactionType.pending:
-        return '⏳';
     }
   }
 

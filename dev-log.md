@@ -29,3 +29,15 @@ dev-log.md
 
 📌 Next:
 - Add filters (Today/Week/Month)
+
+[May 12]
+
+✔ Refactored pending from type → transaction state
+✔ Improved chart interaction persistence
+✔ Fixed responsive layout issues
+
+🧠 Insight:
+Pending is a status, not a transaction direction.
+
+📌 Next:
+Expandable transaction tile
