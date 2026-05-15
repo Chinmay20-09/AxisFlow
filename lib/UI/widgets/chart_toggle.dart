@@ -73,7 +73,7 @@ class ChartToggle extends StatelessWidget {
                 SizedBox(
                   width: 30,
                   child: Icon(
-                    Icons.show_chart,
+                    Icons.auto_graph,
                     size: 17,
                     color: isLine
                         ? Colors.black

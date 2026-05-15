@@ -66,12 +66,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   net: widget.controller.net,
                 ),
                 const SizedBox(height: 12),
-                _chartToggle(),
-                const SizedBox(height: 18),
-                _chartType == _ChartType.line
-                    ? linechart(data: widget.controller.weeklyData)
-                    : barchart(data: widget.controller.weeklyData),
-                const SizedBox(height: 18),
+                Container(
+  padding: const EdgeInsets.all(20),
+  decoration: BoxDecoration(
+    color: AppTheme.surface,
+    borderRadius: BorderRadius.circular(24),
+    border: Border.all(
+      color: AppTheme.border,
+    ),
+  ),
+  child: Column(
+    children: [
+      _chartHeader(),
+
+      const SizedBox(height: 24),
+
+      _chartType == _ChartType.line
+          ? linechart(
+              data: widget.controller.weeklyData,
+            )
+          : barchart(
+              data: widget.controller.weeklyData,
+            ),
+    ],
+  ),
+),
+const SizedBox(height: 18),
                 _filterChips(txns),
                 const SizedBox(height: 20),
                 Container(
@@ -191,38 +211,117 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   );
 
-  Widget _chartToggle() {
-    return Row(
-      children: [
-        ChoiceChip(
-          label: const Text('Line Chart'),
-          selected: _chartType == _ChartType.line,
-          selectedColor: AppTheme.surfaceAlt,
-          backgroundColor: AppTheme.surface,
-          labelStyle: TextStyle(
-            color: _chartType == _ChartType.line ? AppTheme.textPrimary : AppTheme.textSecondary,
-            fontWeight: _chartType == _ChartType.line ? FontWeight.w700 : FontWeight.w500,
-          ),
-          side: BorderSide(color: _chartType == _ChartType.line ? AppTheme.income : AppTheme.border),
-          onSelected: (_) => setState(() => _chartType = _ChartType.line),
-        ),
-        const SizedBox(width: 10),
-        ChoiceChip(
-          label: const Text('Bar Chart'),
-          selected: _chartType == _ChartType.bar,
-          selectedColor: AppTheme.surfaceAlt,
-          backgroundColor: AppTheme.surface,
-          labelStyle: TextStyle(
-            color: _chartType == _ChartType.bar ? AppTheme.textPrimary : AppTheme.textSecondary,
-            fontWeight: _chartType == _ChartType.bar ? FontWeight.w700 : FontWeight.w500,
-          ),
-          side: BorderSide(color: _chartType == _ChartType.bar ? AppTheme.income : AppTheme.border),
-          onSelected: (_) => setState(() => _chartType = _ChartType.bar),
-        ),
-      ],
-    );
-  }
+ Widget _chartHeader() {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Row(
+        children: [
+          const SizedBox(width: 12),
 
+          const Text(
+            'LAST 7 DAYS',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 14,
+              letterSpacing: 4,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+
+      _chartSwitcher(),
+    ],
+  );
+}
+Widget _chartSwitcher() {
+  return GestureDetector(
+    onTap: () {
+      setState(() {
+        _chartType =
+            _chartType == _ChartType.bar
+                ? _ChartType.line
+                : _ChartType.bar;
+      });
+    },
+
+    child: Container(
+      width: 100,
+      height: 50,
+      padding: const EdgeInsets.all(4),
+
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceAlt,
+        borderRadius: BorderRadius.circular(18),
+
+        border: Border.all(
+          color: AppTheme.border,
+        ),
+      ),
+
+      child: Stack(
+        children: [
+
+          // Sliding background
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+
+            alignment:
+                _chartType == _ChartType.bar
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+
+            child: Container(
+              width: 43,
+              height: 48,
+
+              decoration: BoxDecoration(
+                color: AppTheme.income,
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+
+          // Icons
+          Row(
+            children: [
+
+              Expanded(
+                child: Center(
+                  child: Icon(
+                    Icons.bar_chart_rounded,
+                    size: 22,
+
+                    color:
+                        _chartType == _ChartType.bar
+                            ? AppTheme.bg
+                            : AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+
+              Expanded(
+                child: Center(
+                  child: Icon(
+                    Icons.auto_graph,
+                    size: 22,
+
+                    color:
+                        _chartType == _ChartType.line
+                            ? AppTheme.bg
+                            : AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
   Widget _filterChips(List<Transaction> txns) {
     final options = <TransactionType?>[
       null,

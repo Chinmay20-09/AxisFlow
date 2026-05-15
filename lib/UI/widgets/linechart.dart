@@ -9,216 +9,174 @@ class linechart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
 
   const linechart({super.key, required this.data});
-
   @override
-  Widget build(BuildContext context) {
-    if (data.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.border),
+Widget build(BuildContext context) {
+  if (data.isEmpty) {
+    return const Center(
+      child: Text(
+        'No weekly data available yet.',
+        style: TextStyle(
+          color: AppTheme.textSecondary,
+          fontSize: 13,
         ),
-        child: const Row(
-          children: [
-            Icon(Icons.auto_graph, color: AppTheme.textSecondary),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'No weekly data available yet.',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final maxY = _maxY();
-    final minY = _minY(); // net can go negative
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.surface, AppTheme.surfaceAlt],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child:Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Row(
-  children: [
-
-    Container(
-      padding: const EdgeInsets.all(6),
-
-      decoration: BoxDecoration(
-        color: AppTheme.income.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(10),
-      ),
-
-      child: const Icon(
-        Icons.auto_graph,
-        size: 16,
-        color: AppTheme.income,
-      ),
-    ),
-
-    const SizedBox(width: 10),
-
-    const Text(
-      'LAST 7 DAYS',
-      style: TextStyle(
-        color: AppTheme.textSecondary,
-        fontSize: 13,
-        letterSpacing: 3,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  ],
-),
-    SingleChildScrollView(
-  scrollDirection: Axis.horizontal,
-  child: Row(
-    children: [
-      _legend('Income', AppTheme.income),
-      const SizedBox(width: 14),
-
-      _legend('Expense', AppTheme.expense),
-      const SizedBox(width: 14),
-
-      _legend('Pending', AppTheme.pending),
-
-    ],
-  ),
-
-),
-  
-    const SizedBox(height: 20),
-
-          SizedBox(
-            height: 160,
-            child: LineChart(
-              LineChartData(
-                minY: minY,
-                maxY: maxY,
-
-                // Zero line if net goes negative
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: minY < 0
-                      ? [
-                          HorizontalLine(
-                            y: 0,
-                            color: AppTheme.border,
-                            strokeWidth: 1,
-                            dashArray: [6, 4],
-                          ),
-                        ]
-                      : [],
-                ),
-
-                lineTouchData: LineTouchData(
-                  enabled: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    tooltipBorder: BorderSide(color: AppTheme.border),
-                    tooltipBorderRadius: BorderRadius.circular(10),
-                    fitInsideHorizontally: true,
-                    fitInsideVertically: true,
-                    
-                    getTooltipItems: (spots) {
-                      final labels = ['Income', 'Expense', 'Net'];
-                      final colors = [AppTheme.income, AppTheme.expense, AppTheme.pending];
-                      return spots.map((s) {
-                        return LineTooltipItem(
-                          '${labels[s.barIndex]}\n₹${s.y.toStringAsFixed(0)}',
-                          TextStyle(
-                            color: colors[s.barIndex],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        );
-                      }).toList();
-                    },
-                  ),
-                ),
-
-                titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      getTitlesWidget: (val, meta) {
-                        final idx = val.toInt();
-                        if (idx < 0 || idx >= data.length) return const SizedBox();
-                        final day = data[idx]['day'] as DateTime;
-                        return Text(
-                          DateFormat('E').format(day),
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 11,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: (maxY - minY) / 4,
-                  getDrawingHorizontalLine: (_) => FlLine(
-                    color: AppTheme.border,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                ),
-
-                borderData: FlBorderData(show: false),
-
-                lineBarsData: [
-                  // Income line
-                  _buildLine(
-                    spots: _toSpots('income'),
-                    color: AppTheme.income,
-                    isCurved: true,
-                  ),
-                  // Expense line
-                  _buildLine(
-                    spots: _toSpots('expense'),
-                    color: AppTheme.expense,
-                    isCurved: true,
-                  ),
-                  // Net line (income - expense), dashed
-                  _buildLine(
-                    spots: _toNetSpots(),
-                    color: AppTheme.pending,
-                    isCurved: true,
-                    isDashed: true,
-                  ),
-                ],
-              ),
-            ),
-          ),
-  ],
       ),
     );
+  }
+
+  final maxY = _maxY();
+  final minY = _minY();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _legend('Income', AppTheme.income),
+            const SizedBox(width: 14),
+
+            _legend('Expense', AppTheme.expense),
+            const SizedBox(width: 14),
+
+            _legend('Net', AppTheme.pending),
+          ],
+        ),
+      ),
+
+      const SizedBox(height: 20),
+
+      SizedBox(
+        height: 160,
+        child: LineChart(
+          LineChartData(
+            minY: minY,
+            maxY: maxY,
+
+            extraLinesData: ExtraLinesData(
+              horizontalLines: minY < 0
+                  ? [
+                      HorizontalLine(
+                        y: 0,
+                        color: AppTheme.border,
+                        strokeWidth: 1,
+                        dashArray: [6, 4],
+                      ),
+                    ]
+                  : [],
+            ),
+
+            lineTouchData: LineTouchData(
+              enabled: true,
+              touchTooltipData: LineTouchTooltipData(
+                tooltipBorder: BorderSide(color: AppTheme.border),
+                tooltipBorderRadius: BorderRadius.circular(10),
+                fitInsideHorizontally: true,
+                fitInsideVertically: true,
+
+                getTooltipItems: (spots) {
+                  final labels = ['Income', 'Expense', 'Net'];
+
+                  final colors = [
+                    AppTheme.income,
+                    AppTheme.expense,
+                    AppTheme.pending,
+                  ];
+
+                  return spots.map((s) {
+                    return LineTooltipItem(
+                      '${labels[s.barIndex]}\n₹${s.y.toStringAsFixed(0)}',
+                      TextStyle(
+                        color: colors[s.barIndex],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  }).toList();
+                },
+              ),
+            ),
+
+            titlesData: FlTitlesData(
+              leftTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 28,
+
+                  getTitlesWidget: (val, meta) {
+                    final idx = val.toInt();
+
+                    if (idx < 0 || idx >= data.length) {
+                      return const SizedBox();
+                    }
+
+                    final day = data[idx]['day'] as DateTime;
+
+                    return Text(
+                      DateFormat('E').format(day),
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 11,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: (maxY - minY) / 4,
+
+              getDrawingHorizontalLine: (_) => FlLine(
+                color: AppTheme.border,
+                strokeWidth: 1,
+                dashArray: [4, 4],
+              ),
+            ),
+
+            borderData: FlBorderData(show: false),
+
+            lineBarsData: [
+              _buildLine(
+                spots: _toSpots('income'),
+                color: AppTheme.income,
+                isCurved: true,
+              ),
+
+              _buildLine(
+                spots: _toSpots('expense'),
+                color: AppTheme.expense,
+                isCurved: true,
+              ),
+
+              _buildLine(
+                spots: _toNetSpots(),
+                color: AppTheme.pending,
+                isCurved: true,
+                isDashed: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+
   }
 
   LineChartBarData _buildLine({

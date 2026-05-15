@@ -103,7 +103,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         color: AppTheme.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Form(
+      child: SingleChildScrollView(
+  child: Form(
         key: _formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
@@ -117,14 +118,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               decoration: BoxDecoration(
                 color: AppTheme.border,
                 borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-          ),
+                       ),
+        ),
+      
+    ),
           const SizedBox(height: 18),
 
           Row(
             children: [
-              Expanded(
+              Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -323,6 +325,7 @@ const SizedBox(height: 10),
         ],
       ),
       ),
+      )
     );
   }
 
