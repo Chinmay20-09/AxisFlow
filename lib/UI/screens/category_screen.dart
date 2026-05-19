@@ -5,6 +5,7 @@ import '../../data/transaction_model.dart';
 import '../app_theme.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction_sheet.dart';
+import '../widgets/sidemenu.dart';
 
 class CategoryScreen extends StatelessWidget {
   final TransactionController controller;
@@ -20,9 +21,19 @@ class CategoryScreen extends StatelessWidget {
 
         return Scaffold(
           backgroundColor: AppTheme.bg,
-          appBar: AppBar(title: const Text('BY CATEGORY')),
+          drawer: AppDrawer(controller: controller, selectedIndex: 2),
+
+          appBar: AppBar(
+            backgroundColor: AppTheme.bg,
+            title: const Text('Transactions'),
+          ),
           body: categories.isEmpty
-              ? const Center(child: Text('No transactions', style: TextStyle(color: AppTheme.textSecondary)))
+              ? const Center(
+                  child: Text(
+                    'No transactions',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: categories.length,
@@ -30,7 +41,10 @@ class CategoryScreen extends StatelessWidget {
                     final cat = categories[i];
                     final items = grouped[cat]!;
                     final total = items.fold(0.0, (s, t) {
-                      return s + (t.type == TransactionType.expense ? -t.amount : t.amount);
+                      return s +
+                          (t.type == TransactionType.expense
+                              ? -t.amount
+                              : t.amount);
                     });
                     return _CategorySection(
                       category: cat,
@@ -92,32 +106,46 @@ class _CategorySectionState extends State<_CategorySection> {
                 children: [
                   Text(
                     widget.category,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w700, fontSize: 14),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.border,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       '${widget.transactions.length}',
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                   const Spacer(),
                   Text(
                     '${widget.total >= 0 ? '+' : ''}₹${widget.total.abs().toStringAsFixed(0)}',
                     style: TextStyle(
-                      color: widget.total >= 0 ? AppTheme.income : AppTheme.expense,
+                      color: widget.total >= 0
+                          ? AppTheme.income
+                          : AppTheme.expense,
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    _expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     color: AppTheme.textSecondary,
                     size: 18,
                   ),
@@ -129,11 +157,19 @@ class _CategorySectionState extends State<_CategorySection> {
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
-                children: widget.transactions.map((t) => TransactionTile(
-                  transaction: t,
-                  onEdit: t.isEditable ? () => _showEdit(context, t) : null,
-                  onDelete: t.isEditable ? () => widget.controller.delete(t.id) : null,
-                )).toList(),
+                children: widget.transactions
+                    .map(
+                      (t) => TransactionTile(
+                        transaction: t,
+                        onEdit: t.isEditable
+                            ? () => _showEdit(context, t)
+                            : null,
+                        onDelete: t.isEditable
+                            ? () => widget.controller.delete(t.id)
+                            : null,
+                      ),
+                    )
+                    .toList(),
               ),
             ),
         ],
@@ -146,7 +182,8 @@ class _CategorySectionState extends State<_CategorySection> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => AddTransactionSheet(controller: widget.controller, existing: t),
+      builder: (_) =>
+          AddTransactionSheet(controller: widget.controller, existing: t),
     );
   }
 }

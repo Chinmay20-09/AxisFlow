@@ -35,7 +35,7 @@ const List<String> k_exCategories = [
   'EMI 💸',
   'Family 👨‍👩‍👧‍👦',
   'Personal 🧑',
-  'Other 🔄'
+  'Other 🔄',
 ];
 
 class AddTransactionSheet extends StatefulWidget {
@@ -104,228 +104,238 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SingleChildScrollView(
-  child: Form(
-        key: _formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-            child: Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: AppTheme.border,
-                borderRadius: BorderRadius.circular(3),
-                       ),
-        ),
-      
-    ),
-          const SizedBox(height: 18),
-
-          Row(
+        child: Form(
+          key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isEdit ? 'Edit transaction' : 'New transaction',
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Save your income, expense quickly and easily',
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceAlt,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Text(
-                  _typeIcon(_type),
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: AppTheme.typeColor(_type),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppTheme.border,
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-          Row(
-            children: TransactionType.values.map((t) {
-              final selected = _type == t;
-              final color = AppTheme.typeColor(t);
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() {
-                    _type = t;
-                    if (!_currentCategories.contains(_category)) {
-                      _category = _currentCategories.first;
-                    }
-                  }),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    margin: EdgeInsets.only(
-                      right: t != TransactionType.values.last ? 10 : 0,
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? color.withValues(alpha: 0.14)
-                          : AppTheme.surfaceAlt,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: selected ? color : AppTheme.border,
-                        width: selected ? 1.5 : 1,
-                      ),
-                    ),
+              Row(
+                children: [
+                  Flexible(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _typeIcon(t),
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: selected ? color : AppTheme.textSecondary,
+                          isEdit ? 'Edit transaction' : 'New transaction',
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          t.name.toUpperCase(),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Save your income, expense quickly and easily',
                           style: TextStyle(
-                            color: selected ? color : AppTheme.textSecondary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.9,
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 22),
-
-          TextFormField(
-            controller: _amountCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textInputAction: TextInputAction.next,
-            onChanged: (_) => setState(() {}),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-            ],
-            validator: _validateAmount,
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-            ),
-            decoration: const InputDecoration(
-              labelText: 'Amount',
-              helperText: 'Enter the transaction amount',
-              prefixText: '₹ ',
-              prefixStyle: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 20,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          TextFormField(
-            controller: _noteCtrl,
-            textInputAction: TextInputAction.done,
-            style: const TextStyle(color: AppTheme.textPrimary),
-            decoration: const InputDecoration(
-              labelText: 'Note (optional)',
-              hintText: 'e.g. Coffee, salary, rent',
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          CheckboxListTile(
-          value: _isPending,
-          onChanged: (v) {
-          setState(() {
-            _isPending = v ?? false;
-          });
-        },
-          activeColor: AppTheme.typeColor(_type),
-          contentPadding: EdgeInsets.zero,
-          title: const Text(
-          'Mark as Pending',
-          style: TextStyle(
-          color: AppTheme.textPrimary,
-          fontWeight: FontWeight.w600,
-    ),
-  ),
-),
-const SizedBox(height: 10),
-
-          DropdownButtonFormField<String>(
-            initialValue: _category,
-            dropdownColor: AppTheme.surfaceAlt,
-            style: const TextStyle(color: AppTheme.textPrimary),
-            decoration: const InputDecoration(labelText: 'Category'),
-            items: _currentCategories
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-            onChanged: (v) => setState(() => _category = v!),
-          ),
-          const SizedBox(height: 26),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _canSave ? _save : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _canSave ? AppTheme.typeColor(_type) : AppTheme.border,
-                foregroundColor: AppTheme.bg,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: _saving
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.bg),
-                    )
-                  : Text(
-                      isEdit ? 'UPDATE TRANSACTION' : 'ADD TRANSACTION',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceAlt,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.border),
+                    ),
+                    child: Text(
+                      _typeIcon(_type),
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: AppTheme.typeColor(_type),
                       ),
                     ),
-            ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                children: TransactionType.values.map((t) {
+                  final selected = _type == t;
+                  final color = AppTheme.typeColor(t);
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() {
+                        _type = t;
+                        if (!_currentCategories.contains(_category)) {
+                          _category = _currentCategories.first;
+                        }
+                      }),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        margin: EdgeInsets.only(
+                          right: t != TransactionType.values.last ? 10 : 0,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? color.withValues(alpha: 0.14)
+                              : AppTheme.surfaceAlt,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: selected ? color : AppTheme.border,
+                            width: selected ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              _typeIcon(t),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: selected
+                                    ? color
+                                    : AppTheme.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              t.name.toUpperCase(),
+                              style: TextStyle(
+                                color: selected
+                                    ? color
+                                    : AppTheme.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.9,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 22),
+
+              TextFormField(
+                controller: _amountCtrl,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
+                validator: _validateAmount,
+                style: const TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Amount',
+                  helperText: 'Enter the transaction amount',
+                  prefixText: '₹ ',
+                  prefixStyle: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              TextFormField(
+                controller: _noteCtrl,
+                textInputAction: TextInputAction.done,
+                style: const TextStyle(color: AppTheme.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Note (optional)',
+                  hintText: 'e.g. Coffee, salary, rent',
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              CheckboxListTile(
+                value: _isPending,
+                onChanged: (v) {
+                  setState(() {
+                    _isPending = v ?? false;
+                  });
+                },
+                activeColor: AppTheme.typeColor(_type),
+                contentPadding: EdgeInsets.zero,
+                title: const Text(
+                  'Mark as Pending',
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              DropdownButtonFormField<String>(
+                initialValue: _category,
+                dropdownColor: AppTheme.surfaceAlt,
+                style: const TextStyle(color: AppTheme.textPrimary),
+                decoration: const InputDecoration(labelText: 'Category'),
+                items: _currentCategories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (v) => setState(() => _category = v!),
+              ),
+              const SizedBox(height: 26),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _canSave ? _save : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _canSave
+                        ? AppTheme.typeColor(_type)
+                        : AppTheme.border,
+                    foregroundColor: AppTheme.bg,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _saving
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.bg,
+                          ),
+                        )
+                      : Text(
+                          isEdit ? 'UPDATE TRANSACTION' : 'ADD TRANSACTION',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      ),
-      )
     );
   }
 
@@ -345,8 +355,8 @@ const SizedBox(height: 10),
       t.note = _noteCtrl.text.trim();
       t.category = _category;
       t.state = _isPending
-    ? TransactionState.pending
-    : TransactionState.completed;
+          ? TransactionState.pending
+          : TransactionState.completed;
       await widget.controller.update(t);
     } else {
       final t = Transaction(
@@ -357,8 +367,8 @@ const SizedBox(height: 10),
         category: _category,
         createdAt: DateTime.now(),
         state: _isPending
-    ? TransactionState.pending
-    : TransactionState.completed,
+            ? TransactionState.pending
+            : TransactionState.completed,
       );
       await widget.controller.add(t);
     }

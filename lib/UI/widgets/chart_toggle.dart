@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_theme.dart';
 
-enum ChartType {
-  line,
-  bar,
-}
+enum ChartType { line, bar }
 
 class ChartToggle extends StatelessWidget {
   final ChartType selected;
@@ -22,9 +19,7 @@ class ChartToggle extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        onChanged(
-          isLine ? ChartType.bar : ChartType.line,
-        );
+        onChanged(isLine ? ChartType.bar : ChartType.line);
       },
 
       child: AnimatedContainer(
@@ -43,14 +38,11 @@ class ChartToggle extends StatelessWidget {
 
         child: Stack(
           children: [
-
             // Active Indicator
             AnimatedAlign(
               duration: const Duration(milliseconds: 220),
 
-              alignment: isLine
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
+              alignment: isLine ? Alignment.centerLeft : Alignment.centerRight,
 
               child: Container(
                 width: 30,
@@ -65,19 +57,15 @@ class ChartToggle extends StatelessWidget {
 
             // Icons
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
               children: [
-
                 SizedBox(
                   width: 30,
                   child: Icon(
                     Icons.auto_graph,
                     size: 17,
-                    color: isLine
-                        ? Colors.black
-                        : AppTheme.textSecondary,
+                    color: isLine ? Colors.black : AppTheme.textSecondary,
                   ),
                 ),
 
@@ -86,9 +74,7 @@ class ChartToggle extends StatelessWidget {
                   child: Icon(
                     Icons.bar_chart_rounded,
                     size: 17,
-                    color: !isLine
-                        ? Colors.black
-                        : AppTheme.textSecondary,
+                    color: !isLine ? Colors.black : AppTheme.textSecondary,
                   ),
                 ),
               ],

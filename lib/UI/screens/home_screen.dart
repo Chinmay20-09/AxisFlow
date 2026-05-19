@@ -1,414 +1,481 @@
-// lib/ui/screens/home_screen.dart
+// ignore_for_file: unused_element_parameter
+
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import '../../controller/transaction_controller.dart';
-import '../../data/transaction_model.dart';
-import '../app_theme.dart';
-import '../widgets/summary_card.dart';
-import '../widgets/barchart.dart';
-import '../widgets/transaction_tile.dart';
-import 'add_transaction_sheet.dart';
-import 'category_screen.dart';
-import '../widgets/linechart.dart';
+import 'package:transaction/app_strings.dart';
+import 'package:transaction/credentials.dart';
+import 'package:transaction/controller/transaction_controller.dart';
+import 'package:transaction/core/constants/app_radius.dart';
+import 'package:transaction/data/transaction_model.dart';
+import 'package:transaction/core/constants/app_sizes.dart';
+import 'package:transaction/core/constants/app_spacing.dart';
+import 'package:transaction/core/theme/app_colors.dart';
+import 'package:transaction/core/theme/app_text_styles.dart';
+import 'package:transaction/ui/widgets/cards/glass_card.dart';
+import 'package:transaction/ui/widgets/common/section_header.dart';
+import 'package:transaction/ui/widgets/sidemenu.dart';
 
-enum _ChartType { line, bar }
-
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   final TransactionController controller;
+
   const HomeScreen({super.key, required this.controller});
-
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  TransactionType? _filterType;
-  _ChartType _chartType = _ChartType.line;
-
-  List<Transaction> _filteredTransactions(List<Transaction> txns) {
-    if (_filterType == null) return txns;
-    return txns.where((t) => t.type == _filterType).toList();
-  }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: widget.controller,
-      builder: (context, _) {
-        final txns = widget.controller.transactions;
-        final visibleTxns = _filteredTransactions(txns);
+      animation: controller,
+      builder: (context, child) {
+        final analytics = controller.analytics;
+        final weeklyData = analytics.weeklyData;
+        final maxExpense = weeklyData
+            .map((data) => data['expense'] as double)
+            .fold(0.0, (current, value) => max(current, value));
+        final weeklyHeights = weeklyData
+            .map<double>((data) {
+              final expense = data['expense'] as double;
+              if (maxExpense == 0) return 40.0;
+              return 30 + (expense / maxExpense) * 65;
+            })
+            .toList();
+        final recentTransactions = controller.transactions.take(3).toList();
+
         return Scaffold(
-          backgroundColor: AppTheme.bg,
-          appBar: AppBar(
-            title: const Text('AxisFlow'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.grid_view_rounded),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        CategoryScreen(controller: widget.controller),
-                  ),
-                ),
+          backgroundColor: AppColors.surfaceBackground,
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: AppColors.primary,
+            onPressed: () {},
+            child: const Icon(Icons.add, color: AppColors.onSurface),
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.lg,
               ),
-            ],
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SummaryCard(
-                  income: widget.controller.totalincome,
-                  expense: widget.controller.totalexpense,
-                  pending: widget.controller.totalPending,
-                  net: widget.controller.net,
-                ),
-                const SizedBox(height: 12),
-                Container(
-  padding: const EdgeInsets.all(20),
-  decoration: BoxDecoration(
-    color: AppTheme.surface,
-    borderRadius: BorderRadius.circular(24),
-    border: Border.all(
-      color: AppTheme.border,
-    ),
-  ),
-  child: Column(
-    children: [
-      _chartHeader(),
-
-      const SizedBox(height: 24),
-
-      _chartType == _ChartType.line
-          ? linechart(
-              data: widget.controller.weeklyData,
-            )
-          : barchart(
-              data: widget.controller.weeklyData,
-            ),
-    ],
-  ),
-),
-const SizedBox(height: 18),
-                _filterChips(txns),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppTheme.border),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _HomeHeader(controller: controller),
+                  const SizedBox(height: AppSpacing.section),
+                  const _GreetingSection(),
+                  const SizedBox(height: AppSpacing.section),
+                  _TodayFlow(amount: analytics.todayNetFlow),
+                  const SizedBox(height: AppSpacing.section),
+                  _InsightCard(message: analytics.summaryInsight),
+                  const SizedBox(height: AppSpacing.section),
+                  _WeeklyRhythm(
+                    weeklyData: weeklyData,
+                    dailyAverage: analytics.averageDailyExpense,
+                    barHeights: weeklyHeights,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'TRANSACTIONS',
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 11,
-                                letterSpacing: 1.4,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '${visibleTxns.length} of ${txns.length} entries',
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      if (txns.isEmpty)
-                        Column(
-                          children: [
-                            _emptyState(),
-                            const SizedBox(height: 14),
-                            TextButton.icon(
-                              onPressed: _showAdd,
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Add first transaction'),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppTheme.income,
-                                backgroundColor: AppTheme.surfaceAlt,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        Column(
-                          children: visibleTxns
-                              .map(
-                                (t) => TransactionTile(
-                                  transaction: t,
-                                  onEdit: t.isEditable
-                                      ? () => _showEdit(t)
-                                      : null,
-                                  onDelete: t.isEditable
-                                      ? () => _confirmDelete(t.id)
-                                      : null,
-                                ),
-                              )
-                              .toList(),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: _showAdd,
-            backgroundColor: AppTheme.income,
-            foregroundColor: AppTheme.bg,
-            icon: const Icon(Icons.add),
-            label: const Text(
-              'ADD',
-              style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1),
+                  const SizedBox(height: AppSpacing.section),
+                  _RecentActivity(transactions: recentTransactions),
+                ],
+              ),
             ),
           ),
         );
       },
     );
   }
+}
 
-  Widget _emptyState() => Container(
-    padding: const EdgeInsets.symmetric(vertical: 48),
-    alignment: Alignment.center,
-    child: Column(
+class _HomeHeader extends StatelessWidget {
+  final TransactionController controller;
+
+  const _HomeHeader({required this.controller, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text('₹', style: TextStyle(fontSize: 48, color: AppTheme.border)),
-        const SizedBox(height: 12),
-        const Text(
-          'No transactions yet',
-          style: TextStyle(color: AppTheme.textSecondary),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Tap + ADD to get started',
-          style: TextStyle(
-            color: AppTheme.textSecondary.withValues(alpha: 0.5),
-            fontSize: 12,
-          ),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.reorder, color: AppColors.onSurface),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AppDrawer(
+                      controller: controller,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              AppStrings.appTitle,
+              style: AppTextStyles.sectionTitle.copyWith(
+                color: AppColors.primary,
+                fontSize: 24,
+              ),
+            ),
+          ],
         ),
       ],
-    ),
-  );
+    );
+  }
+}
 
- Widget _chartHeader() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Row(
+class _GreetingSection extends StatelessWidget {
+  const _GreetingSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${AppStrings.goodMorning}, ${AppCredentials.userName}',
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: AppColors.onSurface,
+            fontSize: 28,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Row(
+          children: [
+            Container(
+              width: AppSpacing.xs,
+              height: AppSpacing.xs,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              AppStrings.trackMessage,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TodayFlow extends StatelessWidget {
+  final double amount;
+
+  const _TodayFlow({required this.amount, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final amountString = amount == 0
+        ? '\$0.00'
+        : '${amount.isNegative ? '-' : ''}\$${amount.abs().toStringAsFixed(2)}';
+
+    return Center(
+      child: Column(
         children: [
-          const SizedBox(width: 12),
-
-          const Text(
-            'LAST 7 DAYS',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 14,
-              letterSpacing: 4,
-              fontWeight: FontWeight.w700,
+          Text(
+            AppStrings.todayFlowLabel,
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.onSurfaceVariant.withValues(alpha: 0.7),
+              fontSize: AppSizes.badge,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            amountString,
+            style: AppTextStyles.sectionTitle.copyWith(
+              color: AppColors.primary,
+              fontSize: 42,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
-
-      _chartSwitcher(),
-    ],
-  );
+    );
+  }
 }
-Widget _chartSwitcher() {
-  return GestureDetector(
-    onTap: () {
-      setState(() {
-        _chartType =
-            _chartType == _ChartType.bar
-                ? _ChartType.line
-                : _ChartType.bar;
-      });
-    },
 
-    child: Container(
-      width: 100,
-      height: 50,
-      padding: const EdgeInsets.all(4),
+class _InsightCard extends StatelessWidget {
+  final String message;
 
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceAlt,
-        borderRadius: BorderRadius.circular(18),
+  const _InsightCard({required this.message, super.key});
 
-        border: Border.all(
-          color: AppTheme.border,
-        ),
-      ),
-
-      child: Stack(
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          // Sliding background
-          AnimatedAlign(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-
-            alignment:
-                _chartType == _ChartType.bar
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
-
-            child: Container(
-              width: 43,
-              height: 48,
-
-              decoration: BoxDecoration(
-                color: AppTheme.income,
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          ),
-
-          // Icons
           Row(
             children: [
-
-              Expanded(
-                child: Center(
-                  child: Icon(
-                    Icons.bar_chart_rounded,
-                    size: 22,
-
-                    color:
-                        _chartType == _ChartType.bar
-                            ? AppTheme.bg
-                            : AppTheme.textSecondary,
-                  ),
-                ),
+              const Icon(
+                Icons.auto_awesome,
+                color: AppColors.primary,
+                size: AppSizes.iconSmall,
               ),
-
-              Expanded(
-                child: Center(
-                  child: Icon(
-                    Icons.auto_graph,
-                    size: 22,
-
-                    color:
-                        _chartType == _ChartType.line
-                            ? AppTheme.bg
-                            : AppTheme.textSecondary,
-                  ),
-                ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                AppStrings.aiInsightBadge,
+                style: AppTextStyles.cardBadge.copyWith(color: AppColors.primary),
               ),
             ],
           ),
-        ],
-      ),
-    ),
-  );
-}
-  Widget _filterChips(List<Transaction> txns) {
-    final options = <TransactionType?>[
-      null,
-      TransactionType.income,
-      TransactionType.expense,
-    ];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: options.map((option) {
-          final label = option == null
-              ? 'All'
-              : option.name[0].toUpperCase() + option.name.substring(1);
-          final selected = _filterType == option;
-          final count = option == null
-              ? txns.length
-              : txns.where((t) => t.type == option).length;
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: ChoiceChip(
-              label: Text('$label ($count)'),
-              selected: selected,
-              selectedColor: AppTheme.surfaceAlt,
-              backgroundColor: AppTheme.surface,
-              labelStyle: TextStyle(
-                color: selected ? AppTheme.textPrimary : AppTheme.textSecondary,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              ),
-              side: BorderSide(color: selected ? AppTheme.income : AppTheme.border),
-              onSelected: (_) => setState(() => _filterType = option),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  void _showAdd() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AddTransactionSheet(controller: widget.controller),
-    );
-  }
-
-  void _showEdit(Transaction t) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) =>
-          AddTransactionSheet(controller: widget.controller, existing: t),
-    );
-  }
-
-  void _confirmDelete(String id) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Delete?',
-          style: TextStyle(color: AppTheme.textPrimary),
-        ),
-        content: const Text(
-          'This transaction will be removed.',
-          style: TextStyle(color: AppTheme.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.textSecondary),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            message,
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
             ),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await widget.controller.delete(id);
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: AppTheme.expense),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeeklyRhythm extends StatelessWidget {
+  final List<Map<String, dynamic>> weeklyData;
+  final double dailyAverage;
+  final List<double> barHeights;
+
+  const _WeeklyRhythm({
+    required this.weeklyData,
+    required this.dailyAverage,
+    required this.barHeights,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = weeklyData
+        .map((data) => (data['day'] as DateTime).weekday)
+        .map((weekday) {
+          switch (weekday) {
+            case DateTime.monday:
+              return 'M';
+            case DateTime.tuesday:
+              return 'T';
+            case DateTime.wednesday:
+              return 'W';
+            case DateTime.thursday:
+              return 'T';
+            case DateTime.friday:
+              return 'F';
+            case DateTime.saturday:
+              return 'S';
+            case DateTime.sunday:
+              return 'S';
+            default:
+              return '';
+          }
+        })
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              AppStrings.weeklyRhythmTitle,
+              style: AppTextStyles.sectionTitle.copyWith(fontSize: 18),
+            ),
+            Text(
+              'Avg: \$${dailyAverage.toStringAsFixed(0)}/day',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        SizedBox(
+          height: 90,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(barHeights.length, (index) {
+              final bool isActive = index == barHeights.length - 1;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                  child: _WeeklyBar(
+                    height: barHeights[index],
+                    isActive: isActive,
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(labels.length, (index) {
+            final isActive = index == labels.length - 1;
+            return Text(
+              labels[index],
+              style: AppTextStyles.body.copyWith(
+                color: isActive
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant.withValues(alpha: 0.4),
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeeklyBar extends StatelessWidget {
+  final double height;
+  final bool isActive;
+
+  const _WeeklyBar({required this.height, required this.isActive, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.primary : AppColors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+    );
+  }
+}
+
+class _RecentActivity extends StatelessWidget {
+  final List<Transaction> transactions;
+
+  const _RecentActivity({required this.transactions, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: AppStrings.recentActivityTitle,
+          actionText: AppStrings.viewAll,
+          onAction: () {},
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        if (transactions.isEmpty)
+          Text(
+            'No recent activity yet.',
+            style: AppTextStyles.bodyMuted,
+          )
+        else
+          ...transactions.map((transaction) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: _TransactionTile(
+                icon: transaction.type == TransactionType.income
+                    ? Icons.arrow_upward
+                    : Icons.arrow_downward,
+                title: transaction.note.isNotEmpty
+                    ? transaction.note
+                    : transaction.category,
+                subtitle: _formatTransactionSubtitle(transaction.createdAt),
+                amount: _formatTransactionAmount(transaction),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  String _formatTransactionAmount(Transaction transaction) {
+    final sign = transaction.type == TransactionType.income ? '+' : '-';
+    return '$sign\$${transaction.amount.toStringAsFixed(2)}';
+  }
+
+  String _formatTransactionSubtitle(DateTime createdAt) {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+    if (difference.inDays == 0) {
+      return 'Today, ${createdAt.hour}:${createdAt.minute.toString().padLeft(2, '0')}';
+    }
+    if (difference.inDays == 1) {
+      return 'Yesterday, ${createdAt.hour}:${createdAt.minute.toString().padLeft(2, '0')}';
+    }
+    return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
+  }
+}
+
+class _TransactionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String amount;
+
+  const _TransactionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.amount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppColors.onSurfaceVariant),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.onSurface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Text(
+            amount,
+            style: AppTextStyles.sectionTitle.copyWith(
+              color: AppColors.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 // lib/controller/transaction_controller.dart
 import 'package:flutter/foundation.dart';
+import '../data/services/analytics_service.dart';
 import '../data/transaction_db.dart';
 import '../data/transaction_model.dart';
 
@@ -27,7 +28,10 @@ class TransactionController extends ChangeNotifier {
   }
 
   Future<bool> delete(String id) async {
-    final t = _transactions.firstWhere((e) => e.id == id, orElse: () => throw Exception('Not found'));
+    final t = _transactions.firstWhere(
+      (e) => e.id == id,
+      orElse: () => throw Exception('Not found'),
+    );
     if (!t.isEditable) return false;
     await TransactionDB.delete(id);
     load();
@@ -45,73 +49,35 @@ class TransactionController extends ChangeNotifier {
 
   // Summary
   double get totalincome => _transactions
-    .where((t) =>
-        t.type == TransactionType.income &&
-        t.state == TransactionState.completed)
-    .fold(0.0, (s, t) => s + t.amount);
+      .where(
+        (t) =>
+            t.type == TransactionType.income &&
+            t.state == TransactionState.completed,
+      )
+      .fold(0.0, (s, t) => s + t.amount);
   double get totalexpense => _transactions
-      .where((t) =>
-          t.type == TransactionType.expense &&
-          t.state == TransactionState.completed)
+      .where(
+        (t) =>
+            t.type == TransactionType.expense &&
+            t.state == TransactionState.completed,
+      )
       .fold(0.0, (s, t) => s + t.amount);
   double get totalPending {
-  return _transactions
-      .where((t) => t.state == TransactionState.pending)
-      .fold(0.0, (sum, t) => sum + t.amount);
-}
-List<Transaction> get completedTransactions =>
-    _transactions
-        .where((t) => t.state == TransactionState.completed)
-        .toList();
-List<Transaction> get pendingTransactions =>
-    _transactions
+    return _transactions
         .where((t) => t.state == TransactionState.pending)
-        .toList();
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
 
+  List<Transaction> get completedTransactions => _transactions
+      .where((t) => t.state == TransactionState.completed)
+      .toList();
+  List<Transaction> get pendingTransactions =>
+      _transactions.where((t) => t.state == TransactionState.pending).toList();
 
   double get net => totalincome - totalexpense;
 
   // Daily data for chart (last 7 days)
- List<Map<String, dynamic>> get weeklyData {
+  AnalyticsService get analytics => AnalyticsService(transactions: _transactions);
 
-  final now = DateTime.now();
-
-  // Monday of current week
-  final startOfWeek =
-      now.subtract(Duration(days: now.weekday - 1));
-
-  return List.generate(7, (i) {
-
-    final day = DateTime(
-      startOfWeek.year,
-      startOfWeek.month,
-      startOfWeek.day + i,
-    );
-
-    final dayTxns = _transactions.where(
-      (t) =>
-          t.createdAt.year == day.year &&
-          t.createdAt.month == day.month &&
-          t.createdAt.day == day.day,
-    );
-
-    final income = dayTxns
-        .where((t) =>
-            t.type == TransactionType.income &&
-            t.state == TransactionState.completed)
-        .fold(0.0, (s, t) => s + t.amount);
-
-    final expense = dayTxns
-        .where((t) =>
-            t.type == TransactionType.expense &&
-            t.state == TransactionState.completed)
-        .fold(0.0, (s, t) => s + t.amount);
-
-    return {
-      'day': day,
-      'income': income,
-      'expense': expense,
-    };
-  });
-}
+  List<Map<String, dynamic>> get weeklyData => analytics.weeklyData;
 }

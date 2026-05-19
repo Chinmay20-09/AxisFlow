@@ -75,7 +75,7 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${net >= 0 ? '+' : ''}₹${_fmt(net)}',
+            '${net >= 0 ? '+' : ''}₹${formatAmount(net)}',
             style: TextStyle(
               color: net >= 0 ? AppTheme.income : AppTheme.expense,
               fontSize: 34,
@@ -90,7 +90,12 @@ class SummaryCard extends StatelessWidget {
               children: [
                 _stat('income', income, AppTheme.income, Icons.arrow_upward),
                 const SizedBox(width: 12),
-                _stat('expense', expense, AppTheme.expense, Icons.arrow_downward),
+                _stat(
+                  'expense',
+                  expense,
+                  AppTheme.expense,
+                  Icons.arrow_downward,
+                ),
                 const SizedBox(width: 12),
                 _stat('pending', pending, AppTheme.pending, Icons.schedule),
               ],
@@ -134,7 +139,7 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '₹${_fmt(value)}',
+            '₹${formatAmount(value)}',
             style: TextStyle(
               color: color,
               fontSize: 14,
@@ -147,19 +152,15 @@ class SummaryCard extends StatelessWidget {
     );
   }
 
-  String _fmt(double val) {
-    // ignore: curly_braces_in_flow_control_structures
-    if (val.abs() >= 10000000) return '${(val / 1000000).toStringAsFixed(1)}cr';
-    // ignore: curly_braces_in_flow_control_structures
-    else if (val.abs() >= 100000) return '${(val / 100000).toStringAsFixed(1)}l';
-    // ignore: curly_braces_in_flow_control_structures
-    else if (val.abs() >= 1000) return '${(val / 1000).toStringAsFixed(1)}k';
+  String formatAmount(double val) {
+    if (val.abs() >= 10000000) {
+      return '${(val / 1000000).toStringAsFixed(1)}cr';
+    } else if (val.abs() >= 100000) {
+      return '${(val / 100000).toStringAsFixed(1)}l';
+    } else if (val.abs() >= 1000) {
+      return '${(val / 1000).toStringAsFixed(1)}k';
+    }
+
     return val.toStringAsFixed(0);
-    
-
-
-
-
-
   }
 }

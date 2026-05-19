@@ -45,10 +45,10 @@ class Transaction extends HiveObject {
   });
 
   bool get isEditable {
-  if (state == TransactionState.pending) return true;
+    if (state == TransactionState.pending) return true;
 
-  return DateTime.now().difference(createdAt).inMinutes < 60;
-}
+    return DateTime.now().difference(createdAt).inMinutes < 60;
+  }
 
   String get typeLabel {
     switch (type) {
@@ -61,10 +61,9 @@ class Transaction extends HiveObject {
 
   bool get isIncome => type == TransactionType.income;
   bool get isExpense => type == TransactionType.expense;
-  
 }
 
-@HiveType(typeId: 2) 
+@HiveType(typeId: 2)
 enum TransactionState {
   @HiveField(0)
   completed,

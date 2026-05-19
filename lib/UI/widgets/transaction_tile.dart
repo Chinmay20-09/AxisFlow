@@ -141,8 +141,8 @@ class TransactionTile extends StatelessWidget {
               ],
             ),
           ),
-        )
-      )
+        ),
+      ),
     );
   }
 
