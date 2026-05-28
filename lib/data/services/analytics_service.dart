@@ -1,13 +1,12 @@
-import '../transaction_model.dart';
+import '../models/transaction_model.dart';
 
 class AnalyticsService {
   final List<Transaction> transactions;
 
   AnalyticsService({required this.transactions});
 
-  List<Transaction> get completedTransactions => transactions
-      .where((t) => t.state == TransactionState.completed)
-      .toList();
+  List<Transaction> get completedTransactions =>
+      transactions.where((t) => t.state == TransactionState.completed).toList();
 
   List<Transaction> get completedIncome => completedTransactions
       .where((t) => t.type == TransactionType.income)
@@ -21,7 +20,9 @@ class AnalyticsService {
       completedIncome.fold(0.0, (sum, transaction) => sum + transaction.amount);
 
   double get totalExpense => completedExpenses.fold(
-      0.0, (sum, transaction) => sum + transaction.amount);
+    0.0,
+    (sum, transaction) => sum + transaction.amount,
+  );
 
   double get netCashFlow => totalIncome - totalExpense;
 
@@ -53,9 +54,11 @@ class AnalyticsService {
   double get currentMonthExpense {
     final now = DateTime.now();
     return completedExpenses
-        .where((transaction) =>
-            transaction.createdAt.year == now.year &&
-            transaction.createdAt.month == now.month)
+        .where(
+          (transaction) =>
+              transaction.createdAt.year == now.year &&
+              transaction.createdAt.month == now.month,
+        )
         .fold(0.0, (sum, transaction) => sum + transaction.amount);
   }
 
@@ -63,15 +66,19 @@ class AnalyticsService {
     final now = DateTime.now();
     final previousMonth = DateTime(now.year, now.month - 1);
     return completedExpenses
-        .where((transaction) =>
-            transaction.createdAt.year == previousMonth.year &&
-            transaction.createdAt.month == previousMonth.month)
+        .where(
+          (transaction) =>
+              transaction.createdAt.year == previousMonth.year &&
+              transaction.createdAt.month == previousMonth.month,
+        )
         .fold(0.0, (sum, transaction) => sum + transaction.amount);
   }
 
   double get monthOverMonthChange {
     if (previousMonthExpense == 0) return 0;
-    return ((currentMonthExpense - previousMonthExpense) / previousMonthExpense) * 100;
+    return ((currentMonthExpense - previousMonthExpense) /
+            previousMonthExpense) *
+        100;
   }
 
   double get averageDailyExpense {
@@ -110,15 +117,19 @@ class AnalyticsService {
   }
 
   String get behaviorInsight {
-    final weekendExpenses = completedExpenses.where((transaction) {
-      final weekday = transaction.createdAt.weekday;
-      return weekday == DateTime.saturday || weekday == DateTime.sunday;
-    }).fold(0.0, (sum, transaction) => sum + transaction.amount);
+    final weekendExpenses = completedExpenses
+        .where((transaction) {
+          final weekday = transaction.createdAt.weekday;
+          return weekday == DateTime.saturday || weekday == DateTime.sunday;
+        })
+        .fold(0.0, (sum, transaction) => sum + transaction.amount);
 
-    final weekdayExpenses = completedExpenses.where((transaction) {
-      final weekday = transaction.createdAt.weekday;
-      return weekday >= DateTime.monday && weekday <= DateTime.friday;
-    }).fold(0.0, (sum, transaction) => sum + transaction.amount);
+    final weekdayExpenses = completedExpenses
+        .where((transaction) {
+          final weekday = transaction.createdAt.weekday;
+          return weekday >= DateTime.monday && weekday <= DateTime.friday;
+        })
+        .fold(0.0, (sum, transaction) => sum + transaction.amount);
 
     if (weekdayExpenses == 0 || weekendExpenses == 0) {
       return 'Your spending pattern is stable across the week.';
@@ -157,11 +168,7 @@ class AnalyticsService {
           .where((transaction) => transaction.type == TransactionType.expense)
           .fold(0.0, (sum, transaction) => sum + transaction.amount);
 
-      return {
-        'day': day,
-        'income': income,
-        'expense': expense,
-      };
+      return {'day': day, 'income': income, 'expense': expense};
     });
   }
 
@@ -174,11 +181,13 @@ class AnalyticsService {
     }
 
     final sorted = totals.entries
-        .map((entry) => CategoryAllocation(
-              category: entry.key,
-              total: entry.value,
-              share: 0,
-            ))
+        .map(
+          (entry) => CategoryAllocation(
+            category: entry.key,
+            total: entry.value,
+            share: 0,
+          ),
+        )
         .toList();
 
     final expenseTotal = totalExpense;

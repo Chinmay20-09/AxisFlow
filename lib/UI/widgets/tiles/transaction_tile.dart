@@ -1,8 +1,8 @@
 // lib/ui/widgets/transaction_tile.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../data/transaction_model.dart';
-import '../app_theme.dart';
+import 'package:axisflow/data/models/transaction_model.dart';
+import 'package:axisflow/core/theme/app_theme.dart';
 
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
@@ -82,9 +82,9 @@ class TransactionTile extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          spacing: 8,
                           children: [
                             _chip(transaction.category, AppTheme.textSecondary),
+                            const SizedBox(width: 8),
                             _chip(transaction.typeLabel, color),
                           ],
                         ),

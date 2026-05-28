@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../app_theme.dart';
+import 'package:axisflow/core/theme/app_theme.dart';
 
 // ignore: camel_case_types
 class linechart extends StatelessWidget {

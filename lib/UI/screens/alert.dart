@@ -1,13 +1,18 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:transaction/app_strings.dart';
+import 'package:axisflow/core/constants/app_strings.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 
 void main() {
-  runApp(const AxisFlowApp());
+  runApp(AxisFlowApp());
 }
 
 class AxisFlowApp extends StatelessWidget {
-  const AxisFlowApp({super.key});
+  final TransactionController controller = TransactionController()..load();
+
+  AxisFlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +26,7 @@ class AxisFlowApp extends StatelessWidget {
           surface: AppColors.surface,
         ),
       ),
-      home: const AlertsScreen(),
+      home: AlertsScreen(controller: controller),
     );
   }
 }
@@ -97,125 +102,113 @@ const _historyAlerts = <AlertItem>[
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class AlertsScreen extends StatefulWidget {
-  const AlertsScreen({super.key});
+  final TransactionController controller;
+  const AlertsScreen({super.key, required this.controller});
 
   @override
   State<AlertsScreen> createState() => _AlertsScreenState();
 }
 
 class _AlertsScreenState extends State<AlertsScreen> {
-  int _selectedNavIndex = 2; // Insights is active
+  // Insights is active
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: AppDrawer(controller: widget.controller, selectedIndex: 6),
       backgroundColor: AppColors.background,
       extendBody: true,
-      body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              // ── Top App Bar ──────────────────────────────────────────────────
-              SliverAppBar(
-                pinned: true,
-                backgroundColor: AppColors.background.withValues(alpha: 0.85),
-                elevation: 0,
-                flexibleSpace: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.05),
-                          ),
-                        ),
+      body: CustomScrollView(
+        slivers: [
+          // ── Top App Bar ──────────────────────────────────────────────────
+          SliverAppBar(
+            pinned: true,
+            backgroundColor: AppColors.background.withValues(alpha: 0.85),
+            elevation: 0,
+            flexibleSpace: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.05),
                       ),
                     ),
                   ),
                 ),
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: AppColors.onSurface,
-                      size: 20,
-                    ),
-                    onPressed: () => Navigator.maybePop(context),
-                  ),
-                ),
-                title: Text(
-                  AppStrings.alertsScreenTitle,
-                  style: const TextStyle(
-                    color: AppColors.onSurface,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.notifications_active,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                      onPressed: () {},
-                    ),
-                  ),
-                ],
               ),
-
-              // ── Body ────────────────────────────────────────────────────────
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // Priority section
-                    _SectionHeader(label: AppStrings.prioritySectionLabel),
-                    const SizedBox(height: 24),
-                    ..._priorityAlerts.asMap().entries.map(
-                      (e) => _AnimatedCard(
-                        delay: Duration(milliseconds: 100 * e.key),
-                        child: _AlertCard(item: e.value),
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // History section
-                    _SectionHeader(label: AppStrings.historySectionLabel),
-                    const SizedBox(height: 24),
-                    ..._historyAlerts.asMap().entries.map(
-                      (e) => _AnimatedCard(
-                        delay: Duration(
-                          milliseconds: 100 * (_priorityAlerts.length + e.key),
-                        ),
-                        child: _AlertCard(item: e.value),
-                      ),
-                    ),
-
-                    // Empty placeholder
-                    _AnimatedCard(
-                      delay: Duration(
-                        milliseconds:
-                            100 *
-                            (_priorityAlerts.length + _historyAlerts.length),
-                      ),
-                      child: _EmptyPlaceholder(),
-                    ),
-                  ]),
+            ),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: MenuButton(scaffoldKey: _scaffoldKey),
+            ),
+            title: Text(
+              AppStrings.alertsScreenTitle,
+              style: const TextStyle(
+                color: AppColors.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.notifications_active,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                  onPressed: () {},
                 ),
               ),
             ],
           ),
+
+          // ── Body ────────────────────────────────────────────────────────
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Priority section
+                _SectionHeader(label: AppStrings.prioritySectionLabel),
+                const SizedBox(height: 24),
+                ..._priorityAlerts.asMap().entries.map(
+                  (e) => _AnimatedCard(
+                    delay: Duration(milliseconds: 100 * e.key),
+                    child: _AlertCard(item: e.value),
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // History section
+                _SectionHeader(label: AppStrings.historySectionLabel),
+                const SizedBox(height: 24),
+                ..._historyAlerts.asMap().entries.map(
+                  (e) => _AnimatedCard(
+                    delay: Duration(
+                      milliseconds: 100 * (_priorityAlerts.length + e.key),
+                    ),
+                    child: _AlertCard(item: e.value),
+                  ),
+                ),
+
+                // Empty placeholder
+                _AnimatedCard(
+                  delay: Duration(
+                    milliseconds:
+                        100 * (_priorityAlerts.length + _historyAlerts.length),
+                  ),
+                  child: _EmptyPlaceholder(),
+                ),
+              ]),
+            ),
+          ),
         ],
-      ),
-      bottomNavigationBar: _BottomNav(
-        selectedIndex: _selectedNavIndex,
-        onTap: (i) => setState(() => _selectedNavIndex = i),
       ),
     );
   }
@@ -525,98 +518,4 @@ class _EmptyPlaceholder extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Bottom Navigation Bar ──────────────────────────────────────────────────────
-class _BottomNav extends StatelessWidget {
-  final int selectedIndex;
-  final ValueChanged<int> onTap;
-
-  const _BottomNav({required this.selectedIndex, required this.onTap});
-
-  static const _items = [
-    _NavItem(icon: Icons.account_balance_wallet, label: 'Wealth'),
-    _NavItem(icon: Icons.swap_calls, label: 'Flow'),
-    _NavItem(icon: Icons.insights, label: 'Insights'),
-    _NavItem(icon: Icons.person, label: 'Profile'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.9),
-            border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(context).padding.bottom + 16,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_items.length, (i) {
-              final item = _items[i];
-              final active = i == selectedIndex;
-              return GestureDetector(
-                onTap: () => onTap(i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: active
-                      ? const EdgeInsets.symmetric(horizontal: 20, vertical: 8)
-                      : const EdgeInsets.symmetric(vertical: 8),
-                  decoration: active
-                      ? BoxDecoration(
-                          color: AppColors.primaryContainer.withValues(
-                            alpha: 0.1,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        )
-                      : null,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        item.icon,
-                        color: active
-                            ? AppColors.primary
-                            : AppColors.onSurfaceVariant,
-                        size: 22,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.label,
-                        style: TextStyle(
-                          color: active
-                              ? AppColors.primary
-                              : AppColors.onSurfaceVariant,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.05 * 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem {
-  final IconData icon;
-  final String label;
-
-  const _NavItem({required this.icon, required this.label});
 }

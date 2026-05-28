@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:transaction/core/constants/app_radius.dart';
-import 'package:transaction/core/constants/app_sizes.dart';
-import 'package:transaction/core/constants/app_spacing.dart';
-import 'package:transaction/core/theme/app_colors.dart';
-import 'package:transaction/core/theme/app_text_styles.dart';
+import 'package:axisflow/core/constants/app_radius.dart';
+import 'package:axisflow/core/constants/app_sizes.dart';
+import 'package:axisflow/core/constants/app_spacing.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
+import 'package:axisflow/core/theme/app_text_styles.dart';
 
 enum AxisButtonVariant { primary, secondary }
 
@@ -55,7 +55,7 @@ class AxisButton extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
       ),
       child: Row(
@@ -76,7 +76,13 @@ class AxisButton extends StatelessWidget {
             Icon(icon, size: AppSizes.iconSmall),
             const SizedBox(width: AppSpacing.sm),
           ],
-          Text(label, style: AppTextStyles.body.copyWith(color: foreground, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: AppTextStyles.body.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:transaction/core/constants/app_radius.dart';
-import 'package:transaction/core/constants/app_spacing.dart';
-import 'package:transaction/core/theme/app_colors.dart';
-import 'package:transaction/core/theme/app_text_styles.dart';
+import 'package:axisflow/core/constants/app_radius.dart';
+import 'package:axisflow/core/constants/app_spacing.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
+import 'package:axisflow/core/theme/app_text_styles.dart';
 
 class SettingsTile extends StatelessWidget {
   final IconData icon;
@@ -24,9 +24,9 @@ class SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -38,15 +38,25 @@ class SettingsTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: AppTextStyles.sectionTitle.copyWith(fontSize: 16)),
+                    Text(
+                      title,
+                      style: AppTextStyles.sectionTitle.copyWith(fontSize: 16),
+                    ),
                     if (subtitle != null) ...[
                       const SizedBox(height: AppSpacing.xs),
-                      Text(subtitle!, style: AppTextStyles.body.copyWith(color: AppColors.onSurfaceVariant.withValues(alpha: 0.75))),
+                      Text(
+                        subtitle!,
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.onSurfaceVariant.withValues(
+                            alpha: 0.75,
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 ),
               ),
-             trailing!,
+              trailing!,
             ],
           ),
         ),

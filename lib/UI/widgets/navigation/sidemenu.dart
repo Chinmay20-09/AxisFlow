@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:transaction/ui/screens/alert.dart';
-import 'package:transaction/ui/screens/budgets.dart';
-import 'package:transaction/ui/screens/home_screen.dart';
-import 'package:transaction/ui/screens/settings.dart';
-import '../screens/category_screen.dart';
-import '../../controller/transaction_controller.dart';
-import '../screens/types.dart';
-import '../screens/profile.dart';
-import 'package:transaction/ui/screens/dashboard.dart';
+import 'package:axisflow/ui/screens/alert.dart';
+import 'package:axisflow/ui/screens/budgets.dart';
+import 'package:axisflow/ui/screens/home_screen.dart';
+import 'package:axisflow/ui/screens/settings.dart';
+import 'package:axisflow/ui/screens/types.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/core/config/app_config.dart';
+import 'package:axisflow/ui/screens/profile.dart';
+import 'package:axisflow/ui/screens/dashboard.dart';
+import 'package:axisflow/ui/screens/transaction.dart';
 
 class _C {
   static const surface = Color(0xFF181920);
@@ -63,7 +64,11 @@ class _AppDrawerState extends State<AppDrawer>
     _selected = widget.selectedIndex;
     super.initState();
     _mainItems = [
-      _NavItem(Icons.home_rounded, 'Home', screen: HomeScreen(controller: widget.controller)),
+      _NavItem(
+        Icons.home_rounded,
+        'Home',
+        screen: HomeScreen(controller: widget.controller),
+      ),
 
       _NavItem(
         Icons.bar_chart_rounded,
@@ -74,35 +79,39 @@ class _AppDrawerState extends State<AppDrawer>
       _NavItem(
         Icons.swap_horiz_rounded,
         'Transactions',
-        screen: CategoryScreen(controller: widget.controller),
+        screen: ActivityScreen(controller: widget.controller),
       ),
 
       _NavItem(
         Icons.category_rounded,
         'Categories',
-        screen: const CategoriesScreen(),
+        screen: CategoriesScreen(controller: widget.controller),
       ),
 
       _NavItem(
         Icons.account_balance_wallet_rounded,
         'Budgets',
-        screen: const BudgetsScreen(),
+        screen: BudgetsScreen(controller: widget.controller),
       ),
     ];
     _secondaryItems = [
-      _NavItem(Icons.person_rounded, 'Profile', screen: const ProfileScreen()),
+      _NavItem(
+        Icons.person_rounded,
+        'Profile',
+        screen: ProfileScreen(controller: widget.controller),
+      ),
 
       _NavItem(
         Icons.notifications_rounded,
         'Alerts',
         badge: '3',
-        screen: const AlertsScreen(),
+        screen: AlertsScreen(controller: widget.controller),
       ),
 
       _NavItem(
         Icons.settings_rounded,
         'Settings',
-        screen: const SettingsScreen(),
+        screen: SettingsScreen(controller: widget.controller),
       ),
     ];
     _ctrl = AnimationController(
@@ -274,16 +283,20 @@ class _ProfileHeader extends StatelessWidget {
               border: Border.all(color: _C.accent, width: 1.8),
               color: _C.card,
             ),
-            child: const Icon(Icons.person_rounded, color: _C.accent, size: 24),
+            child: const ClipOval(
+              child: Image(
+                image: NetworkImage(AppCredentials.avatarUrl),
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
-          // Name + role
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Sophia Rose',
+                  AppCredentials.userName,
                   style: const TextStyle(
                     color: _C.label,
                     fontWeight: FontWeight.w700,
@@ -293,7 +306,7 @@ class _ProfileHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'UX / UI Designer',
+                  AppCredentials.userRole,
                   style: TextStyle(
                     color: _C.muted,
                     fontSize: 11,

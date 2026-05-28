@@ -1,12 +1,17 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 
 void main() {
-  runApp(const AxisFlowApp());
+  runApp(AxisFlowApp());
 }
 
 class AxisFlowApp extends StatelessWidget {
-  const AxisFlowApp({super.key});
+  final TransactionController controller = TransactionController()..load();
+
+  AxisFlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +33,7 @@ class AxisFlowApp extends StatelessWidget {
           overlayColor: AppColors.primary.withValues(alpha: 0.12),
         ),
       ),
-      home: const SettingsScreen(),
+      home: SettingsScreen(controller: controller),
     );
   }
 }
@@ -58,13 +63,15 @@ class AppColors {
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final TransactionController controller;
+  const SettingsScreen({super.key, required this.controller});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   // Appearance
   bool _darkMode = true;
   int _accentIndex = 0;
@@ -96,6 +103,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: AppDrawer(controller: widget.controller, selectedIndex: 7),
       backgroundColor: AppColors.background,
       extendBody: true,
       body: CustomScrollView(
@@ -121,14 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             leading: Padding(
               padding: const EdgeInsets.only(left: 16),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.menu,
-                  color: AppColors.primary,
-                  size: 22,
-                ),
-                onPressed: () {},
-              ),
+              child: MenuButton(scaffoldKey: _scaffoldKey),
             ),
             title: const Text(
               'AxisFlow',

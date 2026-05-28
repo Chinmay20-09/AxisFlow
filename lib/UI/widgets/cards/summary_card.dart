@@ -1,6 +1,6 @@
 // lib/ui/widgets/summary_card.dart
 import 'package:flutter/material.dart';
-import '../app_theme.dart';
+import 'package:axisflow/core/theme/app_theme.dart';
 
 class SummaryCard extends StatelessWidget {
   final double income;

@@ -1,10 +1,10 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'data/transaction_db.dart';
+import 'data/local/transaction_db.dart';
 import 'controller/transaction_controller.dart';
-import '../ui/app_theme.dart';
-import '../ui/screens/home_screen.dart';
+import 'core/theme/app_theme.dart';
+import 'ui/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

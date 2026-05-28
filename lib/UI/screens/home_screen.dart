@@ -1,25 +1,26 @@
 // ignore_for_file: unused_element_parameter
-
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:transaction/app_strings.dart';
-import 'package:transaction/credentials.dart';
-import 'package:transaction/controller/transaction_controller.dart';
-import 'package:transaction/core/constants/app_radius.dart';
-import 'package:transaction/data/transaction_model.dart';
-import 'package:transaction/core/constants/app_sizes.dart';
-import 'package:transaction/core/constants/app_spacing.dart';
-import 'package:transaction/core/theme/app_colors.dart';
-import 'package:transaction/core/theme/app_text_styles.dart';
-import 'package:transaction/ui/widgets/cards/glass_card.dart';
-import 'package:transaction/ui/widgets/common/section_header.dart';
-import 'package:transaction/ui/widgets/sidemenu.dart';
+import 'package:axisflow/core/constants/app_strings.dart';
+import 'package:axisflow/core/config/app_config.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/core/constants/app_radius.dart';
+import 'package:axisflow/data/models/transaction_model.dart';
+import 'package:axisflow/core/constants/app_sizes.dart';
+import 'package:axisflow/core/constants/app_spacing.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
+import 'package:axisflow/core/theme/app_text_styles.dart';
+import 'package:axisflow/ui/screens/add_transaction_sheet.dart';
+import 'package:axisflow/ui/widgets/cards/glass_card.dart';
+import 'package:axisflow/ui/widgets/common/section_header.dart';
+import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/ui/widgets/charts/barchart.dart';
 
 class HomeScreen extends StatelessWidget {
   final TransactionController controller;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  const HomeScreen({super.key, required this.controller});
+  HomeScreen({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -28,23 +29,22 @@ class HomeScreen extends StatelessWidget {
       builder: (context, child) {
         final analytics = controller.analytics;
         final weeklyData = analytics.weeklyData;
-        final maxExpense = weeklyData
-            .map((data) => data['expense'] as double)
-            .fold(0.0, (current, value) => max(current, value));
-        final weeklyHeights = weeklyData
-            .map<double>((data) {
-              final expense = data['expense'] as double;
-              if (maxExpense == 0) return 40.0;
-              return 30 + (expense / maxExpense) * 65;
-            })
-            .toList();
         final recentTransactions = controller.transactions.take(3).toList();
 
         return Scaffold(
+          key: _scaffoldKey,
+          drawer: AppDrawer(controller: controller, selectedIndex: 0),
           backgroundColor: AppColors.surfaceBackground,
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.primary,
-            onPressed: () {},
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => AddTransactionSheet(controller: controller),
+              );
+            },
             child: const Icon(Icons.add, color: AppColors.onSurface),
           ),
           body: SafeArea(
@@ -56,7 +56,10 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _HomeHeader(controller: controller),
+                  _HomeHeader(
+                    controller: controller,
+                    scaffoldKey: _scaffoldKey,
+                  ),
                   const SizedBox(height: AppSpacing.section),
                   const _GreetingSection(),
                   const SizedBox(height: AppSpacing.section),
@@ -67,7 +70,6 @@ class HomeScreen extends StatelessWidget {
                   _WeeklyRhythm(
                     weeklyData: weeklyData,
                     dailyAverage: analytics.averageDailyExpense,
-                    barHeights: weeklyHeights,
                   ),
                   const SizedBox(height: AppSpacing.section),
                   _RecentActivity(transactions: recentTransactions),
@@ -83,8 +85,13 @@ class HomeScreen extends StatelessWidget {
 
 class _HomeHeader extends StatelessWidget {
   final TransactionController controller;
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
-  const _HomeHeader({required this.controller, super.key});
+  const _HomeHeader({
+    required this.controller,
+    required this.scaffoldKey,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -93,19 +100,7 @@ class _HomeHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.reorder, color: AppColors.onSurface),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AppDrawer(
-                      controller: controller,
-                    ),
-                  ),
-                );
-              },
-            ),
+            MenuButton(scaffoldKey: scaffoldKey),
             const SizedBox(width: AppSpacing.sm),
             Text(
               AppStrings.appTitle,
@@ -220,7 +215,9 @@ class _InsightCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Text(
                 AppStrings.aiInsightBadge,
-                style: AppTextStyles.cardBadge.copyWith(color: AppColors.primary),
+                style: AppTextStyles.cardBadge.copyWith(
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ),
@@ -243,41 +240,15 @@ class _InsightCard extends StatelessWidget {
 class _WeeklyRhythm extends StatelessWidget {
   final List<Map<String, dynamic>> weeklyData;
   final double dailyAverage;
-  final List<double> barHeights;
 
   const _WeeklyRhythm({
     required this.weeklyData,
     required this.dailyAverage,
-    required this.barHeights,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final labels = weeklyData
-        .map((data) => (data['day'] as DateTime).weekday)
-        .map((weekday) {
-          switch (weekday) {
-            case DateTime.monday:
-              return 'M';
-            case DateTime.tuesday:
-              return 'T';
-            case DateTime.wednesday:
-              return 'W';
-            case DateTime.thursday:
-              return 'T';
-            case DateTime.friday:
-              return 'F';
-            case DateTime.saturday:
-              return 'S';
-            case DateTime.sunday:
-              return 'S';
-            default:
-              return '';
-          }
-        })
-        .toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -297,59 +268,8 @@ class _WeeklyRhythm extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-        SizedBox(
-          height: 90,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(barHeights.length, (index) {
-              final bool isActive = index == barHeights.length - 1;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-                  child: _WeeklyBar(
-                    height: barHeights[index],
-                    isActive: isActive,
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(labels.length, (index) {
-            final isActive = index == labels.length - 1;
-            return Text(
-              labels[index],
-              style: AppTextStyles.body.copyWith(
-                color: isActive
-                    ? AppColors.primary
-                    : AppColors.onSurfaceVariant.withValues(alpha: 0.4),
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              ),
-            );
-          }),
-        ),
+        barchart(data: weeklyData),
       ],
-    );
-  }
-}
-
-class _WeeklyBar extends StatelessWidget {
-  final double height;
-  final bool isActive;
-
-  const _WeeklyBar({required this.height, required this.isActive, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : AppColors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadius.full),
-      ),
     );
   }
 }
@@ -371,10 +291,7 @@ class _RecentActivity extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         if (transactions.isEmpty)
-          Text(
-            'No recent activity yet.',
-            style: AppTextStyles.bodyMuted,
-          )
+          Text('No recent activity yet.', style: AppTextStyles.bodyMuted)
         else
           ...transactions.map((transaction) {
             return Padding(
@@ -431,7 +348,7 @@ class _TransactionTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

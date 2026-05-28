@@ -1,8 +1,8 @@
 // lib/controller/transaction_controller.dart
 import 'package:flutter/foundation.dart';
 import '../data/services/analytics_service.dart';
-import '../data/transaction_db.dart';
-import '../data/transaction_model.dart';
+import '../data/local/transaction_db.dart';
+import '../data/models/transaction_model.dart';
 
 class TransactionController extends ChangeNotifier {
   List<Transaction> _transactions = [];
@@ -77,7 +77,8 @@ class TransactionController extends ChangeNotifier {
   double get net => totalincome - totalexpense;
 
   // Daily data for chart (last 7 days)
-  AnalyticsService get analytics => AnalyticsService(transactions: _transactions);
+  AnalyticsService get analytics =>
+      AnalyticsService(transactions: _transactions);
 
   List<Map<String, dynamic>> get weeklyData => analytics.weeklyData;
 }

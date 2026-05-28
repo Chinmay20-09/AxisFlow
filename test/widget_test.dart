@@ -8,8 +8,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:transaction/controller/transaction_controller.dart';
-import 'package:transaction/main.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/main.dart';
 
 void main() {
   testWidgets('App loads smoke test', (WidgetTester tester) async {

@@ -1,18 +1,25 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/core/constants/app_strings.dart';
+import 'package:axisflow/core/config/app_config.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 
 void main() {
-  runApp(const AxisFlowApp());
+  runApp(AxisFlowApp());
 }
 
 // ── App ────────────────────────────────────────────────────────────────────────
 class AxisFlowApp extends StatelessWidget {
-  const AxisFlowApp({super.key});
+  final TransactionController controller = TransactionController()..load();
+
+  AxisFlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: AppStrings.appTitle,
+      title: AppStrings.appActivityTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.background,
@@ -21,7 +28,7 @@ class AxisFlowApp extends StatelessWidget {
           surface: AppColors.surface,
         ),
       ),
-      home: const ActivityScreen(),
+      home: ActivityScreen(controller: controller),
     );
   }
 }
@@ -143,41 +150,7 @@ class AppTextStyles {
   );
 }
 
-// ── String constants ───────────────────────────────────────────────────────────
-class AppStrings {
-  AppStrings._();
-
-  static const appTitle = 'AxisFlow | Activity';
-  static const appBarBrand = 'Flow';
-  static const searchHint = 'Search transactions…';
-  static const aiInsightLabel = 'AI GENERATED INSIGHTS';
-  static const aiInsightBody =
-      'Your spending on coffee is down 12% this week. That\'s \$18 saved for your "New Tech" goal.';
-  static const aiInsightCta = 'See detailed analysis';
-
-  // Nav labels
-  static const navWealth = 'Wealth';
-  static const navFlow = 'Flow';
-  static const navInsights = 'Insights';
-  static const navProfile = 'Profile';
-
-  // Filter chips
-  static const chips = [
-    'All',
-    'Income',
-    'Expenses',
-    'Today',
-    'Yesterday',
-    'This Week',
-  ];
-
-  // Group labels
-  static const groupToday = 'Today';
-  static const groupYesterday = 'Yesterday';
-  static const groupMarch14 = 'March 14';
-}
-
-// ── Data models ────────────────────────────────────────────────────────────────
+// ── Data models ───────────────────────────────────────────────────────────
 class TransactionItem {
   final IconData icon;
   final String title;
@@ -253,13 +226,15 @@ const _transactionGroups = <TransactionGroup>[
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class ActivityScreen extends StatefulWidget {
-  const ActivityScreen({super.key});
+  final TransactionController controller;
+  const ActivityScreen({super.key, required this.controller});
 
   @override
   State<ActivityScreen> createState() => _ActivityScreenState();
 }
 
 class _ActivityScreenState extends State<ActivityScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedChip = 0;
   final _searchController = TextEditingController();
   bool _searchFocused = false;
@@ -273,6 +248,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: AppDrawer(controller: widget.controller, selectedIndex: 2),
       backgroundColor: AppColors.background,
       extendBody: true,
       body: CustomScrollView(
@@ -334,7 +311,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ),
       title: Row(
         children: [
-          const Icon(Icons.bubble_chart, color: AppColors.primary, size: 22),
+          MenuButton(scaffoldKey: _scaffoldKey),
           const SizedBox(width: 8),
           Text(AppStrings.appBarBrand, style: AppTextStyles.appBarTitle),
         ],
@@ -357,8 +334,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         Padding(
           padding: const EdgeInsets.only(right: 16),
           child: _Avatar(
-            url:
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuBpE2BJRtNAxvmA1-HCLgQcdYulP0ATa9JrlawmY8QmZW8vdHkEQsUIlNfHSZ0-Eu0mwLynpngChgniM-rku_fw5OvS8cFTFA1wXBuDdRtjTdL1r69amigEGDD8m2FZk5MZSMfsPVT7ZACTH0t34RGMWpD67_iJdDRSNE4gWxMdle9F4I3oM_scs4HTh4OoLMOPeehrUf2X42iTBRt1_R4gMPRy15e2q6pLsAHw3thnDrsD4-6_MNjF5kJD9FZKWii9kz19up8LAbx5',
+            url: AppCredentials.avatarUrl,
             size: AppDims.avatarSize,
           ),
         ),
@@ -434,10 +410,6 @@ class _SearchAndFilters extends StatelessWidget {
                 hintStyle: TextStyle(
                   color: AppColors.secondary.withValues(alpha: AppOpacity.low),
                   fontSize: 14,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: AppColors.secondary.withValues(alpha: AppOpacity.low),
                 ),
                 filled: true,
                 fillColor: const Color(0xFF0F1115),

@@ -1,12 +1,17 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 
 void main() {
-  runApp(const AxisFlowApp());
+  runApp(AxisFlowApp());
 }
 
 class AxisFlowApp extends StatelessWidget {
-  const AxisFlowApp({super.key});
+  final TransactionController controller = TransactionController()..load();
+
+  AxisFlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +25,7 @@ class AxisFlowApp extends StatelessWidget {
           surface: AppColors.surface,
         ),
       ),
-      home: const BudgetsScreen(),
+      home: BudgetsScreen(controller: controller),
     );
   }
 }
@@ -120,18 +125,22 @@ final _budgets = <BudgetItem>[
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class BudgetsScreen extends StatefulWidget {
-  const BudgetsScreen({super.key});
+  final TransactionController controller;
+  const BudgetsScreen({super.key, required this.controller});
 
   @override
   State<BudgetsScreen> createState() => _BudgetsScreenState();
 }
 
 class _BudgetsScreenState extends State<BudgetsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedNavIndex = 2;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: AppDrawer(controller: widget.controller, selectedIndex: 4),
       backgroundColor: AppColors.background,
       extendBody: true,
       body: CustomScrollView(
@@ -148,10 +157,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               ),
             ),
             title: Row(
-              children: const [
-                Icon(Icons.bubble_chart, color: AppColors.primary, size: 22),
-                SizedBox(width: 8),
-                Text(
+              children: [
+                MenuButton(scaffoldKey: _scaffoldKey),
+                const SizedBox(width: 8),
+                const Text(
                   'AxisFlow',
                   style: TextStyle(
                     color: AppColors.primary,

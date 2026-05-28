@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:transaction/core/constants/app_spacing.dart';
-import 'package:transaction/core/theme/app_text_styles.dart';
-import 'package:transaction/ui/widgets/common/axis_button.dart';
+import 'package:axisflow/core/constants/app_spacing.dart';
+import 'package:axisflow/core/theme/app_text_styles.dart';
+import 'package:axisflow/ui/widgets/common/axis_button.dart';
 
 class SectionHeader extends StatelessWidget {
   final String title;
@@ -21,12 +21,10 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget? action = trailing ??
+    final Widget? action =
+        trailing ??
         (actionText != null
-            ? AxisButton.secondary(
-                label: actionText!,
-                onPressed: onAction,
-              )
+            ? AxisButton.secondary(label: actionText!, onPressed: onAction)
             : null);
 
     return Row(

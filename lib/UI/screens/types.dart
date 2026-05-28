@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
 
 void main() {
   runApp(const AxisFlowApp());
@@ -81,7 +82,9 @@ const _categories = <CategoryItem>[
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key});
+  final TransactionController? controller;
+
+  const CategoriesScreen({super.key, this.controller});
 
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
@@ -141,7 +144,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 actions: const [
                   Padding(
                     padding: EdgeInsets.only(right: 16),
-                    child: Icon(Icons.more_vert, color: AppColors.onSurface),
+                    child: Icon(Icons.reorder, color: AppColors.onSurface),
                   ),
                 ],
               ),

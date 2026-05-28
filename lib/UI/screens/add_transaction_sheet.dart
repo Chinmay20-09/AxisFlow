@@ -1,42 +1,11 @@
 // lib/ui/screens/add_transaction_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../controller/transaction_controller.dart';
-import '../../data/transaction_model.dart';
-import '../app_theme.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/data/models/transaction_model.dart';
+import 'package:axisflow/core/constants/app_strings.dart';
+import 'package:axisflow/core/theme/app_theme.dart';
 import 'dart:math';
-
-// ignore: constant_identifier_names
-const List<String> k_inCategories = [
-  'Salary 💰',
-  'Freelance 💻',
-  'Business 🏢',
-  'Investment 💼',
-  'Gift 🎁',
-  'Refund 💸',
-  'Bonus 🎉',
-  'Rental 🏠',
-  'Scholarship 🎓',
-  'Other 🔄',
-];
-
-// ignore: constant_identifier_names
-const List<String> k_exCategories = [
-  'Food 🍽️',
-  'Transport 🚗',
-  'Bills 💳',
-  'Shopping 🛍️',
-  'Health 🏥',
-  'Education 📚',
-  'Entertainment 🎬',
-  'Travel 🌍',
-  'Subscription 💳',
-  'Rent 🏠',
-  'EMI 💸',
-  'Family 👨‍👩‍👧‍👦',
-  'Personal 🧑',
-  'Other 🔄',
-];
 
 class AddTransactionSheet extends StatefulWidget {
   final TransactionController controller;
@@ -69,7 +38,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   @override
   void initState() {
     super.initState();
-    _category = k_inCategories.first;
+    _category = AppStrings.incomeCategories.first;
     final e = widget.existing;
     if (e != null) {
       _amountCtrl.text = e.amount.toStringAsFixed(0);
@@ -83,9 +52,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   List<String> get _currentCategories {
     switch (_type) {
       case TransactionType.income:
-        return k_inCategories;
+        return AppStrings.incomeCategories;
       case TransactionType.expense:
-        return k_exCategories;
+        return AppStrings.expenseCategories;
     }
   }
 

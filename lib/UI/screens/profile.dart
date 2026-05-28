@@ -1,12 +1,18 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/core/config/app_config.dart';
+import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 
 void main() {
-  runApp(const AxisFlowApp());
+  runApp(AxisFlowApp());
 }
 
 class AxisFlowApp extends StatelessWidget {
-  const AxisFlowApp({super.key});
+  final TransactionController controller = TransactionController()..load();
+
+  AxisFlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +26,7 @@ class AxisFlowApp extends StatelessWidget {
           surface: AppColors.surface,
         ),
       ),
-      home: const ProfileScreen(),
+      home: ProfileScreen(controller: controller),
     );
   }
 }
@@ -43,19 +49,22 @@ class AppColors {
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final TransactionController controller;
+  const ProfileScreen({super.key, required this.controller});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _darkMode = true;
-  int _selectedNavIndex = 3; // Profile is active
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _darkMode = true; // Profile is active
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: AppDrawer(controller: widget.controller, selectedIndex: 5),
       backgroundColor: AppColors.background,
       extendBody: true,
       body: Stack(
@@ -84,11 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 title: Row(
                   children: [
-                    const Icon(
-                      Icons.bubble_chart,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
+                    MenuButton(scaffoldKey: _scaffoldKey),
                     const SizedBox(width: 10),
                     const Text(
                       'Profile',
@@ -114,40 +119,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
 
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // ── Profile header ─────────────────────────────────────────
-                    _ProfileHeader(),
-                    const SizedBox(height: 32),
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+                  child: Column(
+                    children: [
+                      // ── Profile header ─────────────────────────────────────────
+                      _ProfileHeader(),
+                      const SizedBox(height: 32),
 
-                    // ── AI Insight card ────────────────────────────────────────
-                    _AiInsightCard(),
-                    const SizedBox(height: 32),
+                      // ── AI Insight card ────────────────────────────────────────
+                      _AiInsightCard(),
+                      const SizedBox(height: 32),
 
-                    // ── Settings grid ──────────────────────────────────────────
-                    _SettingsGrid(
-                      darkMode: _darkMode,
-                      onDarkModeToggle: () =>
-                          setState(() => _darkMode = !_darkMode),
-                    ),
-                    const SizedBox(height: 32),
+                      // ── Settings grid ──────────────────────────────────────────
+                      _SettingsGrid(
+                        darkMode: _darkMode,
+                        onDarkModeToggle: () =>
+                            setState(() => _darkMode = !_darkMode),
+                      ),
+                      const SizedBox(height: 32),
 
-                    // ── Logout ─────────────────────────────────────────────────
-                    _LogoutButton(),
-                  ]),
+                      // ── Logout ─────────────────────────────────────────────────
+                      _LogoutButton(),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         ],
-      ),
-
-      // ── Bottom nav ────────────────────────────────────────────────────────────
-      bottomNavigationBar: _BottomNav(
-        selectedIndex: _selectedNavIndex,
-        onTap: (i) => setState(() => _selectedNavIndex = i),
       ),
     );
   }
@@ -174,7 +175,7 @@ class _ProfileHeader extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               child: ClipOval(
                 child: Image.network(
-                  'https://lh3.googleusercontent.com/aida-public/AB6AXuCHQ3Md9bwL4z5Q8JZ5QBRaX_rvSZo2rKWKnTaxzMhxX-rNvLG6kKwSNxfXXTbsqvwPR5mJDvzBpRr4B8EwjXtieAGUns4Q_om_ETxPJa1Kn7sC1bYbD9Nsz5qVWSnStav5EPTpDSHqx0Fu8gbKyr1n7aV3Tyo_bqE5PvdZSYdqbSFL348OZOm9dQ9v7hajHZ0ohwG_xBWe-7jbBV59ALKP-bcnq_C1qiFEuyY8QnS5Bs0j9tv1xmHJbrpqnt8X5aKEjXLr-rU6ruiS',
+                  AppCredentials.avatarUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => Container(
                     color: AppColors.surfaceContainer,
@@ -208,9 +209,9 @@ class _ProfileHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Alex Rivers',
-          style: TextStyle(
+        Text(
+          AppCredentials.userName,
+          style: const TextStyle(
             color: AppColors.onSurface,
             fontSize: 32,
             fontWeight: FontWeight.w600,
@@ -225,9 +226,9 @@ class _ProfileHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
             border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           ),
-          child: const Text(
-            'AXIS PREMIUM',
-            style: TextStyle(
+          child: Text(
+            AppCredentials.userPlan,
+            style: const TextStyle(
               color: AppColors.primary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -677,98 +678,4 @@ class _LogoutButtonState extends State<_LogoutButton> {
       ),
     );
   }
-}
-
-// ── Bottom Navigation Bar ──────────────────────────────────────────────────────
-class _BottomNav extends StatelessWidget {
-  final int selectedIndex;
-  final ValueChanged<int> onTap;
-
-  const _BottomNav({required this.selectedIndex, required this.onTap});
-
-  static const _items = [
-    _NavItem(icon: Icons.account_balance_wallet, label: 'Wealth'),
-    _NavItem(icon: Icons.swap_calls, label: 'Flow'),
-    _NavItem(icon: Icons.insights, label: 'Insights'),
-    _NavItem(icon: Icons.person, label: 'Profile'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.9),
-            border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 12,
-            bottom: MediaQuery.of(context).padding.bottom + 12,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_items.length, (i) {
-              final item = _items[i];
-              final active = i == selectedIndex;
-              return GestureDetector(
-                onTap: () => onTap(i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: active
-                      ? const EdgeInsets.symmetric(horizontal: 12, vertical: 4)
-                      : EdgeInsets.zero,
-                  decoration: active
-                      ? BoxDecoration(
-                          color: AppColors.primaryContainer.withValues(
-                            alpha: 0.1,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        )
-                      : null,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        item.icon,
-                        color: active
-                            ? AppColors.primary
-                            : AppColors.onSurfaceVariant,
-                        size: 24,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.label,
-                        style: TextStyle(
-                          color: active
-                              ? AppColors.primary
-                              : AppColors.onSurfaceVariant,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.05 * 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem {
-  final IconData icon;
-  final String label;
-
-  const _NavItem({required this.icon, required this.label});
 }

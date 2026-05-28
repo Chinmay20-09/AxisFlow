@@ -1,6 +1,6 @@
 // lib/data/transaction_db.dart
 import 'package:hive_flutter/hive_flutter.dart';
-import 'transaction_model.dart';
+import '../models/transaction_model.dart';
 
 class TransactionDB {
   static const String _boxName = 'transactions';
