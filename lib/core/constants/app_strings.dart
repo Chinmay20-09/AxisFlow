@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class AppStrings {
   static const appTitle = 'AxisFlow';
 
@@ -33,30 +31,7 @@ class AppStrings {
 
   static const chartHeights = [40.0, 60.0, 85.0, 50.0, 70.0, 95.0, 30.0];
 
-  static const transactions = [
-    {
-      'icon': Icons.local_cafe,
-      'title': 'Blue Bottle Coffee',
-      'subtitle': 'Today, 8:45 AM',
-      'amount': '-\$6.50',
-    },
-
-    {
-      'icon': Icons.shopping_bag,
-      'title': 'Whole Foods',
-      'subtitle': 'Today, 11:30 AM',
-      'amount': '-\$36.00',
-    },
-
-    {
-      'icon': Icons.directions_subway,
-      'title': 'Metro',
-      'subtitle': 'Yesterday, 6:15 PM',
-      'amount': '-\$2.90',
-    },
-  ];
-
-  static const List<String> incomeCategories = [
+ static const List<String> incomeCategories = [
     'Salary 💰',
     'Freelance 💻',
     'Business 📈',
@@ -110,5 +85,4 @@ class AppStrings {
 
   static const groupToday = 'Today';
   static const groupYesterday = 'Yesterday';
-  static const groupMarch14 = 'March 14';
 }

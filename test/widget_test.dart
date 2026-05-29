@@ -12,20 +12,18 @@ import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/main.dart';
 
 void main() {
-  testWidgets('App loads smoke test', (WidgetTester tester) async {
+  testWidgets('App loads and opens add sheet', (WidgetTester tester) async {
     final controller = TransactionController();
     await tester.pumpWidget(AxisFlowApp(controller: controller));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify the FAB '+' exists
+    expect(find.byIcon(Icons.add), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
+    // Tap the '+' icon and open add transaction sheet.
     await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify the add sheet is shown with header text
+    expect(find.text('New transaction'), findsOneWidget);
   });
 }

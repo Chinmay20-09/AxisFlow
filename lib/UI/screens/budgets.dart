@@ -76,52 +76,7 @@ class BudgetItem {
   });
 }
 
-final _budgets = <BudgetItem>[
-  BudgetItem(
-    iconColor: AppColors.primary,
-    icon: Icons.restaurant,
-    title: 'Food Budget',
-    spent: '₹4,000',
-    total: '₹6,000',
-    remaining: '₹2,000 remaining',
-    progress: 0.66,
-    status: BudgetStatus.caution,
-    iconBg: AppColors.primary.withValues(alpha: (0.1)),
-  ),
-  BudgetItem(
-    iconColor: AppColors.secondary,
-    icon: Icons.commute,
-    title: 'Travel Budget',
-    spent: '₹1,200',
-    total: '₹3,000',
-    remaining: '₹1,800 remaining',
-    progress: 0.40,
-    status: BudgetStatus.onTrack,
-    iconBg: AppColors.secondaryContainer.withValues(alpha: (0.1)),
-  ),
-  BudgetItem(
-    icon: Icons.movie,
-    title: 'Entertainment',
-    spent: '₹4,800',
-    total: '₹5,000',
-    remaining: '₹200 remaining',
-    progress: 0.96,
-    status: BudgetStatus.critical,
-    iconBg: AppColors.errorContainer.withValues(alpha: (0.2)),
-    iconColor: AppColors.error,
-  ),
-  BudgetItem(
-    icon: Icons.lightbulb,
-    title: 'Utilities',
-    spent: '₹2,000',
-    total: '₹2,500',
-    remaining: '₹500 remaining',
-    progress: 0.80,
-    status: BudgetStatus.pending,
-    iconBg: AppColors.surfaceContainerHighest,
-    iconColor: AppColors.onSurfaceVariant,
-  ),
-];
+// Budgets are computed at runtime from analytics (top expense categories). The previous static demo list was removed.
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class BudgetsScreen extends StatefulWidget {
@@ -235,11 +190,75 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                ..._budgets.map(
-                  (b) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _BudgetCard(item: b),
-                  ),
+                AnimatedBuilder(
+                  animation: widget.controller,
+                  builder: (context, _) {
+                    final analytics = widget.controller.analytics;
+                    final top = analytics.topExpenseCategories;
+
+                    final budgetItems = top.map((alloc) {
+                      final spent = alloc.total;
+                      final totalBudget = top.fold(
+  0.0,
+  (sum, cat) => sum + cat.total,
+);
+                      final progress = totalBudget > 0 ? (spent / totalBudget).clamp(0.0, 1.0) : 0.0;
+                      final remaining = (totalBudget - spent).toStringAsFixed(0);
+
+                      BudgetStatus status;
+                      if (progress >= 0.95) {
+                        status = BudgetStatus.critical;
+                      } else if (progress >= 0.75) {
+                        status = BudgetStatus.caution;
+                      } else {
+                        status = BudgetStatus.onTrack;
+                      }
+
+                      // basic icon selection
+                      IconData icon;
+                      Color iconColor = AppColors.onSurfaceVariant;
+                      Color iconBg = AppColors.surfaceContainerHighest;
+                      switch (alloc.category.toLowerCase()) {
+                        case 'food':
+                          icon = Icons.restaurant;
+                          iconColor = AppColors.primary;
+                          iconBg = AppColors.primary.withValues(alpha: 0.1);
+                          break;
+                        case 'travel':
+                          icon = Icons.commute;
+                          iconColor = AppColors.secondary;
+                          iconBg = AppColors.secondaryContainer.withValues(alpha: 0.1);
+                          break;
+                        case 'entertainment':
+                          icon = Icons.movie;
+                          iconColor = AppColors.error;
+                          iconBg = AppColors.errorContainer.withValues(alpha: 0.12);
+                          break;
+                        default:
+                          icon = Icons.category;
+                      }
+
+                      return BudgetItem(
+                        icon: icon,
+                        title: alloc.category,
+                        spent: '₹${spent.toStringAsFixed(0)}',
+                        total: '₹${totalBudget.toStringAsFixed(0)}',
+                        remaining: '₹$remaining remaining',
+                        progress: progress,
+                        status: status,
+                        iconBg: iconBg,
+                        iconColor: iconColor,
+                      );
+                    }).toList();
+
+                    if (budgetItems.isEmpty) {
+                      return Text('No budgets available yet.', style: TextStyle(color: AppColors.onSurfaceVariant));
+                    }
+
+                    return Column(
+                      children: budgetItems.map((b) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _BudgetCard(item: b))).toList(),
+                    );
+                  },
                 ),
               ]),
             ),

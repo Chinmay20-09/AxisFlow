@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/ui/widgets/tiles/transaction_tile.dart';
+import 'package:axisflow/ui/screens/add_transaction_sheet.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 
@@ -123,29 +125,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
                   child: Column(
-                    children: [
-                      // ── Profile header ─────────────────────────────────────────
-                      _ProfileHeader(),
-                      const SizedBox(height: 32),
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // ── Profile header ─────────────────────────────────────────
+                                    _ProfileHeader(),
+                                    const SizedBox(height: 24),
 
-                      // ── AI Insight card ────────────────────────────────────────
-                      _AiInsightCard(),
-                      const SizedBox(height: 32),
+                                    // ── AI Insight (driven by analytics) ───────────────────────
+                                    AnimatedBuilder(
+                                      animation: widget.controller,
+                                      builder: (context, _) {
+                                        final analytics = widget.controller.analytics;
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(24),
+                                              child: BackdropFilter(
+                                                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white.withValues(alpha: 0.04),
+                                                    borderRadius: BorderRadius.circular(24),
+                                                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                                  ),
+                                                  padding: const EdgeInsets.all(24),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Row(
+                                                        children: const [
+                                                          Icon(Icons.auto_awesome, color: AppColors.primary, size: 18),
+                                                          SizedBox(width: 8),
+                                                          Text('AI GENERATED', style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      Text(analytics.summaryInsight, style: TextStyle(color: AppColors.onSurface, fontSize: 16, height: 1.5)),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 24),
 
-                      // ── Settings grid ──────────────────────────────────────────
-                      _SettingsGrid(
-                        darkMode: _darkMode,
-                        onDarkModeToggle: () =>
-                            setState(() => _darkMode = !_darkMode),
-                      ),
-                      const SizedBox(height: 32),
+                                            // ── Recent transactions
+                                            Text('Recent activity', style: TextStyle(color: AppColors.onSurface, fontSize: 18, fontWeight: FontWeight.w600)),
+                                            const SizedBox(height: 12),
+                                            Column(
+                                              children: widget.controller.transactions.take(5).map((tx) => TransactionTile(
+                                                    transaction: tx,
+                                                    onEdit: () {
+                                                      showModalBottomSheet(
+                                                        context: context,
+                                                        isScrollControlled: true,
+                                                        backgroundColor: Colors.transparent,
+                                                        builder: (_) => AddTransactionSheet(controller: widget.controller, existing: tx),
+                                                      );
+                                                    },
+                                                    onDelete: () async {
+                                                      final confirm = await showDialog<bool>(
+                                                        context: context,
+                                                        builder: (ctx) => AlertDialog(
+                                                          title: const Text('Delete transaction'),
+                                                          content: const Text('Are you sure you want to delete this transaction?'),
+                                                          actions: [
+                                                            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                                                            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+                                                          ],
+                                                        ),
+                                                      );
+                                                      if (confirm == true) {
+                                                        await widget.controller.delete(tx.id);
+                                                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
+                                                      }
+                                                    },
+                                                  )).toList(),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
 
-                      // ── Logout ─────────────────────────────────────────────────
-                      _LogoutButton(),
-                    ],
-                  ),
-                ),
-              ),
+                                    const SizedBox(height: 24),
+
+                                    // ── Settings grid ──────────────────────────────────────────
+                                    _SettingsGrid(
+                                      darkMode: _darkMode,
+                                      onDarkModeToggle: () =>
+                                          setState(() => _darkMode = !_darkMode),
+                                    ),
+                                    const SizedBox(height: 32),
+
+                                    // ── Logout ─────────────────────────────────────────────────
+                                    _LogoutButton(),
+                                  ],
+                                ),
+                              ),
+                            ),
             ],
           ),
         ],
@@ -240,9 +317,6 @@ class _ProfileHeader extends StatelessWidget {
     );
   }
 }
-
-// ── AI Insight Card ────────────────────────────────────────────────────────────
-class _AiInsightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -329,7 +403,7 @@ class _AiInsightCard extends StatelessWidget {
       ),
     );
   }
-}
+
 
 // ── Settings Grid ──────────────────────────────────────────────────────────────
 class _SettingsGrid extends StatelessWidget {

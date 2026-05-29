@@ -8,7 +8,7 @@ import 'package:axisflow/core/constants/app_sizes.dart';
 import 'package:axisflow/core/constants/app_spacing.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/core/theme/app_text_styles.dart';
-import 'package:axisflow/ui/widgets/charts/barchart.dart';
+import 'package:axisflow/ui/widgets/charts/linechart.dart';
 import 'package:axisflow/ui/widgets/cards/analytics_card.dart';
 import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
@@ -30,14 +30,12 @@ class AxisFlowInsightsScreen extends StatelessWidget {
         final topCategory = topCategories.isNotEmpty
             ? topCategories.first
             : CategoryAllocation(category: 'No expenses', total: 0, share: 0);
-        final monthChange = analytics.monthOverMonthChange;
-        final monthLabel = monthChange.abs().toStringAsFixed(1);
-        final monthIcon = monthChange <= 0
-            ? Icons.trending_down
-            : Icons.trending_up;
-        final monthIconColor = monthChange <= 0
+        final monthIcon = analytics.totalIncome > analytics.totalExpense
+            ? Icons.trending_up
+            : Icons.trending_down;
+        final monthIconColor = analytics.totalIncome > analytics.totalExpense
             ? AppColors.primary
-            : AppColors.primary;
+            : AppColors.secondary;
 
         return Scaffold(
           key: _scaffoldKey,
@@ -145,16 +143,11 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                                   Row(
                                     children: [
                                       Icon(
-                                        monthIcon,
+                                      monthIcon,
                                         size: AppSizes.iconSmall,
                                         color: monthIconColor,
                                       ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Text(
-                                        '$monthLabel% from last month',
-                                        style: AppTextStyles.bodyMuted,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                      const SizedBox(width: AppSpacing.sm)
                                     ],
                                   ),
                                 ],
@@ -164,7 +157,7 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                         ),
 
                         const SizedBox(height: AppSpacing.xxxl),
-                        barchart(data: analytics.weeklyData),
+                        linechart(data: analytics.weeklyData),
                       ],
                     ),
                   ),
@@ -188,7 +181,7 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                                 height: AppSizes.chartDiameter,
                                 width: AppSizes.chartDiameter,
                                 child: CircularProgressIndicator(
-                                  value: topCategory.share,
+                                  value: topCategory.share.clamp(0.0, 1.0),
                                   strokeWidth: AppSizes.chartStroke,
                                   backgroundColor: Colors.white12,
                                   valueColor: const AlwaysStoppedAnimation(

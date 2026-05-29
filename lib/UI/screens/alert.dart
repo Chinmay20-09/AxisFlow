@@ -4,6 +4,9 @@ import 'package:axisflow/core/constants/app_strings.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/ui/widgets/common/animated_card.dart';
+import 'package:axisflow/ui/widgets/common/empty_placeholder.dart';
+import 'package:axisflow/ui/widgets/common/section_header.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -68,37 +71,7 @@ class AlertItem {
   });
 }
 
-const _priorityAlerts = <AlertItem>[
-  AlertItem(
-    type: AlertType.priority,
-    icon: Icons.query_stats,
-    title: 'Spending Insight',
-    body: 'Food spending increased 30% compared to last week.',
-  ),
-  AlertItem(
-    type: AlertType.priority,
-    icon: Icons.account_balance,
-    title: 'Budget Alert',
-    body: 'Budget for Entertainment almost exceeded (92%).',
-    progressValue: 0.92,
-  ),
-];
-
-const _historyAlerts = <AlertItem>[
-  AlertItem(
-    type: AlertType.achievement,
-    icon: Icons.stars,
-    title: 'Achievement',
-    body: "Savings improved this month. You're \$450 ahead of your goal.",
-    isAiInsight: true,
-  ),
-  AlertItem(
-    type: AlertType.neutral,
-    icon: Icons.edit_calendar,
-    title: 'Action Needed',
-    body: 'No transactions added today. Stay on track.',
-  ),
-];
+/* Alerts are generated from analytics at runtime — static demo alerts removed */
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class AlertsScreen extends StatefulWidget {
@@ -173,37 +146,57 @@ class _AlertsScreenState extends State<AlertsScreen> {
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Priority section
-                _SectionHeader(label: AppStrings.prioritySectionLabel),
-                const SizedBox(height: 24),
-                ..._priorityAlerts.asMap().entries.map(
-                  (e) => _AnimatedCard(
-                    delay: Duration(milliseconds: 100 * e.key),
-                    child: _AlertCard(item: e.value),
-                  ),
-                ),
+                // Dynamic alerts generated from analytics
+                AnimatedBuilder(
+                  animation: widget.controller,
+                  builder: (context, _) {
+                    final analytics = widget.controller.analytics;
 
-                const SizedBox(height: 40),
+                    final priorityItems = <AlertItem>[
+                      AlertItem(
+                        type: AlertType.priority,
+                        icon: Icons.query_stats,
+                        title: 'Spending Insight',
+                        body: analytics.summaryInsight,
+                      ),
+                      AlertItem(
+                        type: AlertType.priority,
+                        icon: Icons.account_balance,
+                        title: 'Month Spending',
+                        body: 'This month: ₹${analytics.currentMonthExpense.toStringAsFixed(0)}',
+                        progressValue: analytics.totalIncome > 0 ? (analytics.currentMonthExpense / analytics.totalIncome) : null,
+                      ),
+                    ];
 
-                // History section
-                _SectionHeader(label: AppStrings.historySectionLabel),
-                const SizedBox(height: 24),
-                ..._historyAlerts.asMap().entries.map(
-                  (e) => _AnimatedCard(
-                    delay: Duration(
-                      milliseconds: 100 * (_priorityAlerts.length + e.key),
-                    ),
-                    child: _AlertCard(item: e.value),
-                  ),
-                ),
+                    final historyItems = <AlertItem>[
+                      AlertItem(
+                        type: AlertType.achievement,
+                        icon: Icons.stars,
+                        title: 'Behaviour Insight',
+                        body: analytics.behaviorInsight,
+                        isAiInsight: true,
+                      ),
+                    ];
 
-                // Empty placeholder
-                _AnimatedCard(
-                  delay: Duration(
-                    milliseconds:
-                        100 * (_priorityAlerts.length + _historyAlerts.length),
-                  ),
-                  child: _EmptyPlaceholder(),
+                    final widgets = <Widget>[];
+                    widgets.add(_SectionHeader(label: AppStrings.prioritySectionLabel));
+                    widgets.add(const SizedBox(height: 24));
+                    for (var i = 0; i < priorityItems.length; i++) {
+                      widgets.add(_AnimatedCard(delay: Duration(milliseconds: 100 * i), child: _AlertCard(item: priorityItems[i])));
+                    }
+
+                    widgets.add(const SizedBox(height: 40));
+                    widgets.add(_SectionHeader(label: AppStrings.historySectionLabel));
+                    widgets.add(const SizedBox(height: 24));
+
+                    for (var i = 0; i < historyItems.length; i++) {
+                      widgets.add(_AnimatedCard(delay: Duration(milliseconds: 100 * (priorityItems.length + i)), child: _AlertCard(item: historyItems[i])));
+                    }
+
+                    widgets.add(_AnimatedCard(delay: Duration(milliseconds: 100 * (priorityItems.length + historyItems.length)), child: _EmptyPlaceholder()));
+
+                    return Column(children: widgets);
+                  },
                 ),
               ]),
             ),

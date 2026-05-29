@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:axisflow/core/constants/app_strings.dart';
 import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/data/models/transaction_model.dart';
+import 'package:axisflow/ui/widgets/tiles/transaction_tile.dart';
+import 'package:axisflow/ui/screens/add_transaction_sheet.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/ui/screens/dashboard.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -150,79 +154,7 @@ class AppTextStyles {
   );
 }
 
-// ── Data models ───────────────────────────────────────────────────────────
-class TransactionItem {
-  final IconData icon;
-  final String title;
-  final String meta; // time + category string
-  final String amount;
-  final bool isIncome;
-
-  const TransactionItem({
-    required this.icon,
-    required this.title,
-    required this.meta,
-    required this.amount,
-    this.isIncome = false,
-  });
-}
-
-class TransactionGroup {
-  final String label;
-  final List<TransactionItem> items;
-
-  const TransactionGroup({required this.label, required this.items});
-}
-
-// ── Static data ────────────────────────────────────────────────────────────────
-const _transactionGroups = <TransactionGroup>[
-  TransactionGroup(
-    label: AppStrings.groupToday,
-    items: [
-      TransactionItem(
-        icon: Icons.coffee,
-        title: 'Starbucks',
-        meta: '08:45 AM • Food & Drink',
-        amount: '- \$6.50',
-      ),
-      TransactionItem(
-        icon: Icons.payments,
-        title: 'Salary Deposit',
-        meta: '12:00 PM • Income',
-        amount: '+ \$5,400.00',
-        isIncome: true,
-      ),
-    ],
-  ),
-  TransactionGroup(
-    label: AppStrings.groupYesterday,
-    items: [
-      TransactionItem(
-        icon: Icons.devices,
-        title: 'Apple Subscription',
-        meta: '09:15 PM • Entertainment',
-        amount: '- \$14.99',
-      ),
-      TransactionItem(
-        icon: Icons.local_gas_station,
-        title: 'Gas Station',
-        meta: '04:30 PM • Transport',
-        amount: '- \$52.20',
-      ),
-    ],
-  ),
-  TransactionGroup(
-    label: AppStrings.groupMarch14,
-    items: [
-      TransactionItem(
-        icon: Icons.home,
-        title: 'Rent Payment',
-        meta: '10:00 AM • Housing',
-        amount: '- \$2,100.00',
-      ),
-    ],
-  ),
-];
+/* Transaction demo data removed — groups are now built from TransactionController.transactions */
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class ActivityScreen extends StatefulWidget {
@@ -244,7 +176,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     _searchController.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -272,13 +203,38 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   onChipSelected: (i) => setState(() => _selectedChip = i),
                 ),
                 const SizedBox(height: AppDims.sectionGap),
-                ..._transactionGroups.map(
-                  (g) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppDims.sectionGap),
-                    child: _TransactionGroup(group: g),
-                  ),
+                AnimatedBuilder(
+                  animation: widget.controller,
+                  builder: (context, _) {
+                    final txs = widget.controller.transactions;
+                    final groups = <String, List<Transaction>>{};
+                    final now = DateTime.now();
+                    for (final t in txs) {
+                      String label;
+                      if (now.year == t.createdAt.year && now.month == t.createdAt.month && now.day == t.createdAt.day) {
+                        label = AppStrings.groupToday;
+                      } else {
+                        final yesterday = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1));
+                        if (t.createdAt.year == yesterday.year && t.createdAt.month == yesterday.month && t.createdAt.day == yesterday.day) {
+                          label = AppStrings.groupYesterday;
+                        } else {
+                          label = '${t.createdAt.day}/${t.createdAt.month}/${t.createdAt.year}';
+                        }
+                      }
+                      groups.putIfAbsent(label, () => []).add(t);
+                    }
+
+                    final widgets = groups.entries.map<Widget>((e) => Padding(
+                          padding: const EdgeInsets.only(bottom: AppDims.sectionGap),
+                          child: _TransactionGroup(label: e.key, transactions: e.value, controller: widget.controller),
+                        )).toList();
+
+                    widgets.add(const SizedBox(height: AppDims.sectionGap));
+                    widgets.add(_AiInsightCard(controller: widget.controller));
+
+                    return Column(children: widgets);
+                  },
                 ),
-                _AiInsightCard(),
               ]),
             ),
           ),
@@ -483,9 +439,12 @@ class _SearchAndFilters extends StatelessWidget {
 
 // ── Transaction group ──────────────────────────────────────────────────────────
 class _TransactionGroup extends StatelessWidget {
-  final TransactionGroup group;
+  final String label;
+  final List<Transaction> transactions;
+  final TransactionController controller;
 
-  const _TransactionGroup({required this.group});
+  // ignore: unused_element_parameter
+  const _TransactionGroup({required this.label, required this.transactions, required this.controller, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -495,18 +454,45 @@ class _TransactionGroup extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 8, bottom: 16),
           child: Text(
-            group.label.toUpperCase(),
+            label.toUpperCase(),
             style: AppTextStyles.groupLabel.copyWith(
               color: AppColors.secondary.withValues(alpha: AppOpacity.medium),
             ),
           ),
         ),
         Column(
-          children: group.items
+          children: transactions
               .map(
-                (item) => Padding(
+                (tx) => Padding(
                   padding: const EdgeInsets.only(bottom: AppDims.groupSpacing),
-                  child: _TransactionTile(item: item),
+                  child: TransactionTile(
+                    transaction: tx,
+                    onEdit: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => AddTransactionSheet(controller: controller, existing: tx),
+                      );
+                    },
+                    onDelete: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Delete transaction'),
+                          content: const Text('Are you sure you want to delete this transaction?'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await controller.delete(tx.id);
+                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
+                      }
+                    },
+                  ),
                 ),
               )
               .toList(),
@@ -516,118 +502,13 @@ class _TransactionGroup extends StatelessWidget {
   }
 }
 
-// ── Transaction tile ───────────────────────────────────────────────────────────
-class _TransactionTile extends StatefulWidget {
-  final TransactionItem item;
-
-  const _TransactionTile({required this.item});
-
-  @override
-  State<_TransactionTile> createState() => _TransactionTileState();
-}
-
-class _TransactionTileState extends State<_TransactionTile> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {},
-      child: AnimatedScale(
-        scale: _pressed ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppDims.cardRadius),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: AppDims.backdropBlur,
-              sigmaY: AppDims.backdropBlur,
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(AppDims.cardPadding),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: AppOpacity.glassCard),
-                borderRadius: BorderRadius.circular(AppDims.cardRadius),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: AppOpacity.glassBorder),
-                ),
-              ),
-              child: Row(
-                children: [
-                  // Icon wrapper
-                  Container(
-                    width: AppDims.iconWrapSize,
-                    height: AppDims.iconWrapSize,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerHighest,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      widget.item.icon,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-
-                  // Labels
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.item.title,
-                          style: AppTextStyles.transactionTitle,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.item.meta,
-                          style: AppTextStyles.transactionMeta.copyWith(
-                            color: AppColors.secondary.withValues(
-                              alpha: AppOpacity.medium,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Amount + chevron
-                  Row(
-                    children: [
-                      Text(
-                        widget.item.amount,
-                        style: AppTextStyles.amountBase.copyWith(
-                          color: widget.item.isIncome
-                              ? AppColors.primary
-                              : AppColors.error,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Icon(
-                        Icons.chevron_right,
-                        color: AppColors.secondary.withValues(
-                          alpha: AppOpacity.faint,
-                        ),
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ── AI Insight Card ────────────────────────────────────────────────────────────
 class _AiInsightCard extends StatefulWidget {
+  final TransactionController controller;
+
+  const _AiInsightCard({required this.controller});
+
   @override
   State<_AiInsightCard> createState() => _AiInsightCardState();
 }
@@ -710,17 +591,24 @@ class _AiInsightCardState extends State<_AiInsightCard> {
                         duration: const Duration(milliseconds: 250),
                         curve: Curves.easeOut,
                         child: Row(
-                          children: const [
+                          children:[
                             Text(
                               AppStrings.aiInsightCta,
                               style: AppTextStyles.aiCta,
                             ),
                             SizedBox(width: 6),
-                            Icon(
-                              Icons.arrow_forward,
-                              color: AppColors.primary,
-                              size: 16,
-                            ),
+                            IconButton(
+  icon: Icon(Icons.arrow_forward),
+  color: AppColors.primary,
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AxisFlowInsightsScreen(controller: widget.controller),
+      ),
+    );
+  },
+),
                           ],
                         ),
                       ),

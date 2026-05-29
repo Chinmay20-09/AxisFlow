@@ -8,6 +8,7 @@ abstract class AppColors {
   static const Color surfaceContainerHighest = Color(0xFF22222F);
   static const Color card = Color(0x1AFFFFFF);
   static const Color primary = Color(0xFF6BFB9A);
+  static const Color secondary = Color.fromARGB(255, 251, 14, 14);
   static const Color textPrimary = Color(0xFFE1E2E7);
   static const Color onSurface = Color(0xFFF1F1F5);
   static const Color onSurfaceVariant = Color(0xFF8888AA);
