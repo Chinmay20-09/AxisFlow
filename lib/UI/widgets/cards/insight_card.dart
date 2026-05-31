@@ -16,13 +16,30 @@ class InsightCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome, color: AppColors.primary, size: 16),
+              const Icon(
+                Icons.auto_awesome,
+                color: AppColors.primary,
+                size: 16,
+              ),
               const SizedBox(width: AppSpacing.sm),
-              Text('AI INSIGHT', style: AppTextStyles.cardBadge.copyWith(color: AppColors.primary)),
+              Text(
+                'AI INSIGHT',
+                style: AppTextStyles.cardBadge.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text(message, style: AppTextStyles.body.copyWith(color: AppColors.onSurface, fontSize: 20, fontWeight: FontWeight.w600, height: 1.4)),
+          Text(
+            message,
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );

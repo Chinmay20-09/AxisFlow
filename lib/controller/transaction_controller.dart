@@ -28,11 +28,7 @@ class TransactionController extends ChangeNotifier {
   }
 
   Future<bool> delete(String id) async {
-    final t = _transactions.firstWhere(
-      (e) => e.id == id,
-      orElse: () => throw Exception('Not found'),
-    );
-    if (!t.isEditable) return false;
+    if (!_transactions.any((e) => e.id == id)) throw Exception('Not found');
     await TransactionDB.delete(id);
     load();
     return true;

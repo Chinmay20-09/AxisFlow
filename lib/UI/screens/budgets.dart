@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/core/formatters.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -89,13 +90,13 @@ class BudgetsScreen extends StatefulWidget {
 
 class _BudgetsScreenState extends State<BudgetsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedNavIndex = 2;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       drawer: AppDrawer(controller: widget.controller, selectedIndex: 4),
+
       backgroundColor: AppColors.background,
       extendBody: true,
       body: CustomScrollView(
@@ -111,10 +112,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 child: const SizedBox.expand(),
               ),
             ),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: MenuButton(
+                scaffoldKey: _scaffoldKey,
+                controller: widget.controller,
+              ),
+            ),
             title: Row(
               children: [
-                MenuButton(scaffoldKey: _scaffoldKey),
-                const SizedBox(width: 8),
                 const Text(
                   'AxisFlow',
                   style: TextStyle(
@@ -139,11 +145,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         color: AppColors.outline.withValues(alpha: 0.2),
                         width: 1,
                       ),
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      size: 18,
-                      color: AppColors.onSurface,
                     ),
                   ),
                 ),
@@ -176,7 +177,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 const SizedBox(height: 32),
 
                 // ── Bento row: Remaining + AI ──────────────────────────────
-                _BentoRow(),
+                _BentoRow(controller: widget.controller),
                 const SizedBox(height: 32),
 
                 // ── Category list ──────────────────────────────────────────
@@ -199,11 +200,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     final budgetItems = top.map((alloc) {
                       final spent = alloc.total;
                       final totalBudget = top.fold(
-  0.0,
-  (sum, cat) => sum + cat.total,
-);
-                      final progress = totalBudget > 0 ? (spent / totalBudget).clamp(0.0, 1.0) : 0.0;
-                      final remaining = (totalBudget - spent).toStringAsFixed(0);
+                        0.0,
+                        (sum, cat) => sum + cat.total,
+                      );
+                      final progress = totalBudget > 0
+                          ? (spent / totalBudget).clamp(0.0, 1.0)
+                          : 0.0;
+                      final remaining = formatCompactCurrency(
+                        totalBudget - spent,
+                      );
 
                       BudgetStatus status;
                       if (progress >= 0.95) {
@@ -227,12 +232,16 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         case 'travel':
                           icon = Icons.commute;
                           iconColor = AppColors.secondary;
-                          iconBg = AppColors.secondaryContainer.withValues(alpha: 0.1);
+                          iconBg = AppColors.secondaryContainer.withValues(
+                            alpha: 0.1,
+                          );
                           break;
                         case 'entertainment':
                           icon = Icons.movie;
                           iconColor = AppColors.error;
-                          iconBg = AppColors.errorContainer.withValues(alpha: 0.12);
+                          iconBg = AppColors.errorContainer.withValues(
+                            alpha: 0.12,
+                          );
                           break;
                         default:
                           icon = Icons.category;
@@ -241,9 +250,9 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       return BudgetItem(
                         icon: icon,
                         title: alloc.category,
-                        spent: '₹${spent.toStringAsFixed(0)}',
-                        total: '₹${totalBudget.toStringAsFixed(0)}',
-                        remaining: '₹$remaining remaining',
+                        spent: formatCompactCurrency(spent),
+                        total: formatCompactCurrency(totalBudget),
+                        remaining: '$remaining remaining',
                         progress: progress,
                         status: status,
                         iconBg: iconBg,
@@ -252,11 +261,21 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     }).toList();
 
                     if (budgetItems.isEmpty) {
-                      return Text('No budgets available yet.', style: TextStyle(color: AppColors.onSurfaceVariant));
+                      return Text(
+                        'No budgets available yet.',
+                        style: TextStyle(color: AppColors.onSurfaceVariant),
+                      );
                     }
 
                     return Column(
-                      children: budgetItems.map((b) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _BudgetCard(item: b))).toList(),
+                      children: budgetItems
+                          .map(
+                            (b) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _BudgetCard(item: b),
+                            ),
+                          )
+                          .toList(),
                     );
                   },
                 ),
@@ -265,90 +284,118 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _BottomNav(
-        selectedIndex: _selectedNavIndex,
-        onTap: (i) => setState(() => _selectedNavIndex = i),
-      ),
     );
   }
 }
 
 // ── Bento row ──────────────────────────────────────────────────────────────────
 class _BentoRow extends StatelessWidget {
+  final TransactionController controller;
+
+  const _BentoRow({required this.controller});
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Remaining balance card
-        _GlassCard(
-          child: Stack(
-            children: [
-              // Ambient glow blob
-              Positioned(top: -32, right: -32, child: _PulsingGlow()),
-              Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'REMAINING BALANCE',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.1 * 11,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
+        // Remaining balance card (driven from analytics)
+        AnimatedBuilder(
+          animation: controller,
+          builder: (context, _) {
+            final analytics = controller.analytics;
+            final remainingValue =
+                analytics.totalIncome -
+                analytics.currentMonthExpense -
+                analytics.totalPending;
+            final remainingText = formatCompactCurrency(remainingValue);
+
+            return _GlassCard(
+              child: Stack(
+                children: [
+                  // Ambient glow blob
+                  Positioned(top: -32, right: -32, child: _PulsingGlow()),
+                  Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          '₹12,400',
+                          'REMAINING BALANCE',
                           style: TextStyle(
-                            color: AppColors.onSurface,
-                            fontSize: 36,
+                            color: AppColors.primary,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            letterSpacing: -0.72,
+                            letterSpacing: 0.1 * 11,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'left this month',
-                          style: TextStyle(
-                            color: AppColors.secondary.withValues(alpha: (0.6)),
-                            fontSize: 14,
-                          ),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              remainingText,
+                              style: const TextStyle(
+                                color: AppColors.onSurface,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.72,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'left this month',
+                              style: TextStyle(
+                                color: AppColors.secondary.withValues(
+                                  alpha: (0.6),
+                                ),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            _PillButton(
+                              label: 'Adjust Limits',
+                              filled: true,
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Adjust Limits not implemented',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            _PillButton(
+                              label: 'Details',
+                              filled: false,
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Details not implemented'),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        _PillButton(
-                          label: 'Adjust Limits',
-                          filled: true,
-                          onTap: () {},
-                        ),
-                        const SizedBox(width: 12),
-                        _PillButton(
-                          label: 'Details',
-                          filled: false,
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
         const SizedBox(height: 12),
 
-        // AI Insight card
-        _AiInsightCard(),
+        // AI Insight card (driven from analytics)
+        _AiInsightCard(controller: controller),
       ],
     );
   }
@@ -447,8 +494,26 @@ class _PillButton extends StatelessWidget {
 
 // ── AI Insight card ────────────────────────────────────────────────────────────
 class _AiInsightCard extends StatelessWidget {
+  final TransactionController controller;
+  const _AiInsightCard({required this.controller});
+
   @override
   Widget build(BuildContext context) {
+    final analytics = controller.analytics;
+    final top = analytics.topExpenseCategories.isNotEmpty
+        ? analytics.topExpenseCategories.first
+        : null;
+    final insightText = top != null
+        ? 'Your top category is "${top.category}" (${formatCompactCurrency(top.total)}). ${analytics.summaryInsight}'
+        : analytics.summaryInsight;
+
+    final lastTx = analytics.completedTransactions.isNotEmpty
+        ? analytics.completedTransactions.last.createdAt
+        : null;
+    final minutesAgo = lastTx == null
+        ? 'just now'
+        : '${DateTime.now().difference(lastTx).inMinutes} minutes ago';
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
@@ -488,27 +553,12 @@ class _AiInsightCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    color: AppColors.onSurface,
-                    fontSize: 16,
-                    height: 1.5,
-                  ),
-                  children: [
-                    TextSpan(
-                      text:
-                          'Based on your current "Food" spending velocity, you might exceed your limit by ',
-                    ),
-                    TextSpan(
-                      text: '₹800',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    TextSpan(text: '. Consider reducing dining out next week.'),
-                  ],
+              Text(
+                insightText,
+                style: const TextStyle(
+                  color: AppColors.onSurface,
+                  fontSize: 16,
+                  height: 1.5,
                 ),
               ),
               const SizedBox(height: 16),
@@ -521,7 +571,7 @@ class _AiInsightCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Calculated 2 minutes ago',
+                    'Calculated $minutesAgo',
                     style: TextStyle(
                       color: AppColors.onSurfaceVariant.withValues(
                         alpha: (0.6),
@@ -793,83 +843,4 @@ class _GlassCard extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Bottom Navigation Bar ──────────────────────────────────────────────────────
-class _BottomNav extends StatelessWidget {
-  final int selectedIndex;
-  final ValueChanged<int> onTap;
-
-  const _BottomNav({required this.selectedIndex, required this.onTap});
-
-  static const _items = [
-    _NavItem(icon: Icons.account_balance_wallet, label: 'Wealth'),
-    _NavItem(icon: Icons.swap_calls, label: 'Flow'),
-    _NavItem(icon: Icons.query_stats, label: 'Insights'),
-    _NavItem(icon: Icons.person, label: 'Profile'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: (0.9)),
-            border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: (0.05))),
-            ),
-          ),
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 12,
-            bottom: MediaQuery.of(context).padding.bottom + 12,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_items.length, (i) {
-              final item = _items[i];
-              final active = i == selectedIndex;
-              return GestureDetector(
-                onTap: () => onTap(i),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      item.icon,
-                      color: active
-                          ? AppColors.primary
-                          : AppColors.secondary.withValues(alpha: (0.6)),
-                      size: 24,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        color: active
-                            ? AppColors.primary
-                            : AppColors.secondary.withValues(alpha: (0.6)),
-                        fontSize: 11,
-                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                        letterSpacing: 0.05 * 11,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem {
-  final IconData icon;
-  final String label;
-
-  const _NavItem({required this.icon, required this.label});
 }

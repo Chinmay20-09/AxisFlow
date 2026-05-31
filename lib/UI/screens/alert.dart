@@ -7,6 +7,7 @@ import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 import 'package:axisflow/ui/widgets/common/animated_card.dart';
 import 'package:axisflow/ui/widgets/common/empty_placeholder.dart';
 import 'package:axisflow/ui/widgets/common/section_header.dart';
+import 'package:axisflow/core/formatters.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -91,6 +92,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: AppDrawer(controller: widget.controller, selectedIndex: 6),
+
       backgroundColor: AppColors.background,
       extendBody: true,
       body: CustomScrollView(
@@ -116,7 +118,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ),
             leading: Padding(
               padding: const EdgeInsets.only(left: 16),
-              child: MenuButton(scaffoldKey: _scaffoldKey),
+              child: MenuButton(
+                scaffoldKey: _scaffoldKey,
+                controller: widget.controller,
+              ),
             ),
             title: Text(
               AppStrings.alertsScreenTitle,
@@ -163,8 +168,12 @@ class _AlertsScreenState extends State<AlertsScreen> {
                         type: AlertType.priority,
                         icon: Icons.account_balance,
                         title: 'Month Spending',
-                        body: 'This month: ₹${analytics.currentMonthExpense.toStringAsFixed(0)}',
-                        progressValue: analytics.totalIncome > 0 ? (analytics.currentMonthExpense / analytics.totalIncome) : null,
+                        body:
+                            'This month: ${formatCompactCurrency(analytics.currentMonthExpense)}',
+                        progressValue: analytics.totalIncome > 0
+                            ? (analytics.currentMonthExpense /
+                                  analytics.totalIncome)
+                            : null,
                       ),
                     ];
 
@@ -179,21 +188,48 @@ class _AlertsScreenState extends State<AlertsScreen> {
                     ];
 
                     final widgets = <Widget>[];
-                    widgets.add(_SectionHeader(label: AppStrings.prioritySectionLabel));
+                    widgets.add(
+                      SectionHeader(title: AppStrings.prioritySectionLabel),
+                    );
                     widgets.add(const SizedBox(height: 24));
                     for (var i = 0; i < priorityItems.length; i++) {
-                      widgets.add(_AnimatedCard(delay: Duration(milliseconds: 100 * i), child: _AlertCard(item: priorityItems[i])));
+                      widgets.add(
+                        AnimatedCard(
+                          delay: Duration(milliseconds: 100 * i),
+                          child: _AlertCard(item: priorityItems[i]),
+                        ),
+                      );
                     }
 
                     widgets.add(const SizedBox(height: 40));
-                    widgets.add(_SectionHeader(label: AppStrings.historySectionLabel));
+                    widgets.add(
+                      SectionHeader(title: AppStrings.historySectionLabel),
+                    );
                     widgets.add(const SizedBox(height: 24));
 
                     for (var i = 0; i < historyItems.length; i++) {
-                      widgets.add(_AnimatedCard(delay: Duration(milliseconds: 100 * (priorityItems.length + i)), child: _AlertCard(item: historyItems[i])));
+                      widgets.add(
+                        AnimatedCard(
+                          delay: Duration(
+                            milliseconds: 100 * (priorityItems.length + i),
+                          ),
+                          child: _AlertCard(item: historyItems[i]),
+                        ),
+                      );
                     }
 
-                    widgets.add(_AnimatedCard(delay: Duration(milliseconds: 100 * (priorityItems.length + historyItems.length)), child: _EmptyPlaceholder()));
+                    widgets.add(
+                      AnimatedCard(
+                        delay: Duration(
+                          milliseconds:
+                              100 *
+                              (priorityItems.length + historyItems.length),
+                        ),
+                        child: EmptyPlaceholder(
+                          message: 'Older notifications cleared',
+                        ),
+                      ),
+                    );
 
                     return Column(children: widgets);
                   },
@@ -202,90 +238,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Section header with divider line ──────────────────────────────────────────
-class _SectionHeader extends StatelessWidget {
-  final String label;
-
-  const _SectionHeader({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.onSurfaceVariant,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1 * 11,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: Colors.white.withValues(alpha: 0.05),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Animated entrance wrapper ──────────────────────────────────────────────────
-class _AnimatedCard extends StatefulWidget {
-  final Widget child;
-  final Duration delay;
-
-  const _AnimatedCard({required this.child, required this.delay});
-
-  @override
-  State<_AnimatedCard> createState() => _AnimatedCardState();
-}
-
-class _AnimatedCardState extends State<_AnimatedCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _opacity;
-  late final Animation<Offset> _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-
-    Future.delayed(widget.delay, () {
-      if (mounted) _ctrl.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: FadeTransition(
-        opacity: _opacity,
-        child: SlideTransition(position: _slide, child: widget.child),
       ),
     );
   }
@@ -474,37 +426,6 @@ class _AlertCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Empty placeholder ──────────────────────────────────────────────────────────
-class _EmptyPlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.05),
-          style: BorderStyle.solid,
-        ),
-      ),
-      child: Center(
-        child: Opacity(
-          opacity: 0.4,
-          child: Text(
-            'Older notifications cleared',
-            style: const TextStyle(
-              color: AppColors.onSurfaceVariant,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.05 * 11,
             ),
           ),
         ),

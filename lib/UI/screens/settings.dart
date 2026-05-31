@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/data/local/settings_db.dart';
+import 'package:axisflow/data/services/export_service.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -83,8 +85,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // AI
   double _insightFreq = 3; // 1=Daily 2=Weekly 3=Adaptive
 
-  // Nav
-  int _selectedNavIndex = 2;
+  // internal
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      await SettingsDB.init();
+      final dark = SettingsDB.get<bool>('appearance.darkMode', _darkMode);
+      final accent = SettingsDB.get<int>(
+        'appearance.accentIndex',
+        _accentIndex,
+      );
+      final currency = SettingsDB.get<String>('finance.currency', _currency);
+      final firstDay = SettingsDB.get<String>('finance.firstDay', _firstDay);
+      final freq = SettingsDB.get<double>('ai.insightFreq', _insightFreq);
+
+      setState(() {
+        _darkMode = dark ?? _darkMode;
+        _accentIndex = accent ?? _accentIndex;
+        _currency = currency ?? _currency;
+        _firstDay = firstDay ?? _firstDay;
+        _insightFreq = freq ?? _insightFreq;
+      });
+    } catch (e) {
+      // If persistence not available, fall back to defaults
+    }
+  }
 
   static const _accentColors = [
     AppColors.accentGreen,
@@ -105,6 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: AppDrawer(controller: widget.controller, selectedIndex: 7),
+
       backgroundColor: AppColors.background,
       extendBody: true,
       body: CustomScrollView(
@@ -130,7 +162,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             leading: Padding(
               padding: const EdgeInsets.only(left: 16),
-              child: MenuButton(scaffoldKey: _scaffoldKey),
+              child: MenuButton(
+                scaffoldKey: _scaffoldKey,
+                controller: widget.controller,
+              ),
             ),
             title: const Text(
               'AxisFlow',
@@ -218,15 +253,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 16),
 
                 // ── Privacy ──────────────────────────────────────────────────
-                _PrivacyCard(),
+                _PrivacyCard(controller: widget.controller),
               ]),
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: _BottomNav(
-        selectedIndex: _selectedNavIndex,
-        onTap: (i) => setState(() => _selectedNavIndex = i),
       ),
     );
   }
@@ -520,7 +551,7 @@ class _FinanceCard extends StatelessWidget {
               ),
               _dropdown(
                 value: currency,
-                items: ['USD (\$)', 'EUR (€)', 'GBP (£)'],
+                items: ['INR (₹)', 'USD (\$)', 'EUR (€)', 'GBP (£)'],
                 onChanged: onCurrencyChanged,
               ),
             ],
@@ -666,6 +697,9 @@ class _AiCard extends StatelessWidget {
 
 // ── Privacy Card ───────────────────────────────────────────────────────────────
 class _PrivacyCard extends StatelessWidget {
+  final TransactionController controller;
+
+  const _PrivacyCard({required this.controller});
   @override
   Widget build(BuildContext context) {
     return _GlassCard(
@@ -679,11 +713,32 @@ class _PrivacyCard extends StatelessWidget {
           _PrivacyTile(
             icon: Icons.download,
             label: 'Data Export',
-            labelColor: AppColors.onSurface,
-            iconColor: AppColors.onSurfaceVariant,
-            chevronColor: AppColors.onSurfaceVariant,
-            hoverColor: Colors.white.withValues(alpha: 0.05),
+            labelColor: AppColors.error,
+            iconColor: AppColors.error,
+            chevronColor: AppColors.error.withValues(alpha: 0.5),
+            hoverColor: AppColors.error.withValues(alpha: 0.05),
+            onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
+
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Exporting transactions...')),
+              );
+              final success = await ExportService.exportTransactions(
+                controller.transactions,
+              );
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    success
+                        ? 'Transactions exported successfully!'
+                        : 'Failed to export transactions. Please try again.',
+                  ),
+                ),
+              );
+            },
           ),
+
           const SizedBox(height: 4),
 
           // Delete Account
@@ -694,6 +749,11 @@ class _PrivacyCard extends StatelessWidget {
             iconColor: AppColors.error,
             chevronColor: AppColors.error.withValues(alpha: 0.5),
             hoverColor: AppColors.error.withValues(alpha: 0.05),
+            onTap: () {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Coming soon')));
+            },
           ),
         ],
       ),
@@ -708,6 +768,7 @@ class _PrivacyTile extends StatefulWidget {
   final Color iconColor;
   final Color chevronColor;
   final Color hoverColor;
+  final VoidCallback? onTap;
 
   const _PrivacyTile({
     required this.icon,
@@ -716,6 +777,7 @@ class _PrivacyTile extends StatefulWidget {
     required this.iconColor,
     required this.chevronColor,
     required this.hoverColor,
+    required this.onTap,
   });
 
   @override
@@ -731,7 +793,7 @@ class _PrivacyTileState extends State<_PrivacyTile> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: () {},
+        onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
@@ -756,83 +818,4 @@ class _PrivacyTileState extends State<_PrivacyTile> {
       ),
     );
   }
-}
-
-// ── Bottom Navigation Bar ──────────────────────────────────────────────────────
-class _BottomNav extends StatelessWidget {
-  final int selectedIndex;
-  final ValueChanged<int> onTap;
-
-  const _BottomNav({required this.selectedIndex, required this.onTap});
-
-  static const _items = [
-    _NavItem(icon: Icons.account_balance_wallet, label: 'Wealth'),
-    _NavItem(icon: Icons.swap_calls, label: 'Flow'),
-    _NavItem(icon: Icons.insights, label: 'Insights'),
-    _NavItem(icon: Icons.person, label: 'Profile'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainer.withValues(alpha: 0.6),
-            border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-            ),
-          ),
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 12,
-            bottom: MediaQuery.of(context).padding.bottom + 12,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_items.length, (i) {
-              final item = _items[i];
-              final active = i == selectedIndex;
-              return GestureDetector(
-                onTap: () => onTap(i),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      item.icon,
-                      color: active
-                          ? AppColors.primary
-                          : AppColors.onSurfaceVariant,
-                      size: 24,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        color: active
-                            ? AppColors.primary
-                            : AppColors.onSurfaceVariant,
-                        fontSize: 11,
-                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                        letterSpacing: 0.05 * 11,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem {
-  final IconData icon;
-  final String label;
-
-  const _NavItem({required this.icon, required this.label});
 }

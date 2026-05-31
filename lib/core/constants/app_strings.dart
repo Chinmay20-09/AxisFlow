@@ -31,7 +31,7 @@ class AppStrings {
 
   static const chartHeights = [40.0, 60.0, 85.0, 50.0, 70.0, 95.0, 30.0];
 
- static const List<String> incomeCategories = [
+  static const List<String> incomeCategories = [
     'Salary 💰',
     'Freelance 💻',
     'Business 📈',
@@ -62,7 +62,7 @@ class AppStrings {
   ];
 
   static const appActivityTitle = 'AxisFlow | Activity';
-  static const appBarBrand = 'Flow';
+  static const appBarBrand = 'AxisFlow';
   static const searchHint = 'Search transactions.';
   static const aiInsightLabel = 'AI GENERATED INSIGHTS';
   static const aiInsightBody =
@@ -85,4 +85,21 @@ class AppStrings {
 
   static const groupToday = 'Today';
   static const groupYesterday = 'Yesterday';
+}
+
+class CategoryHelper {
+  static String cleanCategory(String category) {
+    return category.split(' ').first;
+  }
+}
+
+String formatDate(DateTime dt) {
+  return '${dt.day.toString().padLeft(2, '0')}/'
+      '${dt.month.toString().padLeft(2, '0')}/'
+      '${dt.year}';
+}
+
+String formatTime(DateTime dt) {
+  return '${dt.hour.toString().padLeft(2, '0')}:'
+      '${dt.minute.toString().padLeft(2, '0')}';
 }

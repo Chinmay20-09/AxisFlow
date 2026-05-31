@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:axisflow/core/formatters.dart';
 import 'package:intl/intl.dart';
 import 'package:axisflow/core/theme/app_theme.dart';
 
@@ -60,7 +61,7 @@ class barchart extends StatelessWidget {
                     final label = rodIndex == 0 ? 'Income' : 'Expense';
 
                     return BarTooltipItem(
-                      '$label\n₹${rod.toY.toStringAsFixed(0)}',
+                      '$label\n${formatCompactCurrency(rod.toY)}',
 
                       const TextStyle(
                         color: AppTheme.textPrimary,

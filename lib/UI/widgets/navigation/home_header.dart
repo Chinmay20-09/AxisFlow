@@ -9,7 +9,11 @@ class HomeHeader extends StatelessWidget {
   final TransactionController controller;
   final GlobalKey<ScaffoldState> scaffoldKey;
 
-  const HomeHeader({required this.controller, required this.scaffoldKey, super.key});
+  const HomeHeader({
+    required this.controller,
+    required this.scaffoldKey,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +22,15 @@ class HomeHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            MenuButton(scaffoldKey: scaffoldKey),
+            MenuButton(scaffoldKey: scaffoldKey, controller: controller),
             const SizedBox(width: AppSpacing.sm),
-            Text('AxisFlow', style: AppTextStyles.sectionTitle.copyWith(color: AppColors.primary, fontSize: 24)),
+            Text(
+              'AxisFlow',
+              style: AppTextStyles.sectionTitle.copyWith(
+                color: AppColors.primary,
+                fontSize: 24,
+              ),
+            ),
           ],
         ),
       ],

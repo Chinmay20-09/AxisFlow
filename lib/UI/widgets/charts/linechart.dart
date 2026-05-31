@@ -1,6 +1,7 @@
 // lib/ui/widgets/weekly_chart.dart
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:axisflow/core/formatters.dart';
 import 'package:intl/intl.dart';
 import 'package:axisflow/core/theme/app_theme.dart';
 
@@ -82,7 +83,7 @@ class linechart extends StatelessWidget {
 
                     return spots.map((s) {
                       return LineTooltipItem(
-                        '${labels[s.barIndex]}\n₹${s.y.toStringAsFixed(0)}',
+                        '${labels[s.barIndex]}\n${formatCompactCurrency(s.y)}',
                         TextStyle(
                           color: colors[s.barIndex],
                           fontSize: 12,

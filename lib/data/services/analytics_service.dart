@@ -1,4 +1,5 @@
 import '../models/transaction_model.dart';
+import 'package:axisflow/core/formatters.dart';
 
 class AnalyticsService {
   final List<Transaction> transactions;
@@ -106,7 +107,7 @@ class AnalyticsService {
 
   String get summaryInsight {
     if (yearToDateSavings > 0) {
-      return 'Nice work — you have saved ₹${yearToDateSavings.toStringAsFixed(0)} so far this year.';
+      return 'Nice work — you have saved ${formatCompactCurrency(yearToDateSavings)} so far this year.';
     }
 
     if (currentMonthExpense > totalIncome) {

@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 .github/
+1NPDPRO5.PDF
+*.zip
+
 
 # IntelliJ related
 *.iml

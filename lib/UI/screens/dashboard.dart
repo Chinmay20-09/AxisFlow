@@ -2,13 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
-import 'package:axisflow/data/services/analytics_service.dart';
 import 'package:axisflow/core/constants/app_radius.dart';
 import 'package:axisflow/core/constants/app_sizes.dart';
 import 'package:axisflow/core/constants/app_spacing.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/core/theme/app_text_styles.dart';
 import 'package:axisflow/ui/widgets/charts/linechart.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:axisflow/core/formatters.dart';
 import 'package:axisflow/ui/widgets/cards/analytics_card.dart';
 import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
@@ -27,9 +28,6 @@ class AxisFlowInsightsScreen extends StatelessWidget {
       builder: (context, child) {
         final analytics = controller.analytics;
         final topCategories = analytics.topExpenseCategories;
-        final topCategory = topCategories.isNotEmpty
-            ? topCategories.first
-            : CategoryAllocation(category: 'No expenses', total: 0, share: 0);
         final monthIcon = analytics.totalIncome > analytics.totalExpense
             ? Icons.trending_up
             : Icons.trending_down;
@@ -136,18 +134,20 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    '\$${analytics.currentMonthExpense.toStringAsFixed(0)}',
+                                    (formatCompactCurrency(
+                                      analytics.currentMonthExpense,
+                                    )),
                                     style: AppTextStyles.statValue,
                                   ),
                                   const SizedBox(height: AppSpacing.xs),
                                   Row(
                                     children: [
                                       Icon(
-                                      monthIcon,
+                                        monthIcon,
                                         size: AppSizes.iconSmall,
                                         color: monthIconColor,
                                       ),
-                                      const SizedBox(width: AppSpacing.sm)
+                                      const SizedBox(width: AppSpacing.sm),
                                     ],
                                   ),
                                 ],
@@ -180,27 +180,30 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                               SizedBox(
                                 height: AppSizes.chartDiameter,
                                 width: AppSizes.chartDiameter,
-                                child: CircularProgressIndicator(
-                                  value: topCategory.share.clamp(0.0, 1.0),
-                                  strokeWidth: AppSizes.chartStroke,
-                                  backgroundColor: Colors.white12,
-                                  valueColor: const AlwaysStoppedAnimation(
-                                    AppColors.primary,
+                                child: PieChart(
+                                  PieChartData(
+                                    centerSpaceRadius: 50,
+                                    sectionsSpace: 2,
+                                    sections: topCategories
+                                        .take(3)
+                                        .toList()
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
+                                          final index = entry.key;
+
+                                          return PieChartSectionData(
+                                            color: getRankColor(index),
+                                            titleStyle: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          );
+                                        })
+                                        .toList(),
                                   ),
                                 ),
-                              ),
-                              Column(
-                                children: [
-                                  Text(
-                                    '${(topCategory.share * 100).toStringAsFixed(0)}%',
-                                    style: AppTextStyles.statValue,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    topCategory.category,
-                                    style: AppTextStyles.body,
-                                  ),
-                                ],
                               ),
                             ],
                           ),
@@ -214,12 +217,12 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                           )
                         else
                           ...topCategories.take(3).map((allocation) {
-                            final color = allocation == topCategory
-                                ? AppColors.primary
-                                : AppColors.primary.withValues(alpha: 0.6);
+                            final color = getRankColor(
+                              topCategories.indexOf(allocation),
+                            );
                             return AllocationTile(
                               title: allocation.category,
-                              value: '\$${allocation.total.toStringAsFixed(0)}',
+                              value: formatCompactCurrency(allocation.total),
                               dotColor: color,
                             );
                           }),
@@ -248,8 +251,9 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                             Expanded(
                               child: AnalyticsCard(
                                 title: 'Saved This Year',
-                                value:
-                                    '\$${analytics.yearToDateSavings.toStringAsFixed(0)}',
+                                value: (formatCompactCurrency(
+                                  analytics.yearToDateSavings,
+                                )),
                                 subtitle: 'Year-to-date savings',
                                 icon: Icons.savings,
                                 backgroundColor: Colors.white.withValues(
@@ -262,9 +266,9 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                               child: AnalyticsCard(
                                 title: 'Avg. Rate',
                                 value:
-                                    '${analytics.savingsRate.toStringAsFixed(1)}%',
+                                    '${analytics.savingsRate.clamp(0.0, 99.9).toStringAsFixed(1)}%',
                                 subtitle: 'Net margin on income',
-                                icon: Icons.trending_up,
+                                icon: monthIcon,
                                 backgroundColor: Colors.white.withValues(
                                   alpha: 0.04,
                                 ),
@@ -302,7 +306,7 @@ class _DashboardTopBar extends StatelessWidget {
       children: [
         Row(
           children: [
-            MenuButton(scaffoldKey: scaffoldKey),
+            MenuButton(scaffoldKey: scaffoldKey, controller: controller),
             const SizedBox(width: AppSpacing.sm),
             const Text('AxisFlow', style: AppTextStyles.appTitle),
           ],
@@ -378,5 +382,18 @@ class AllocationTile extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Color getRankColor(int index) {
+  switch (index) {
+    case 0:
+      return Colors.red;
+    case 1:
+      return Colors.orange;
+    case 2:
+      return Colors.green;
+    default:
+      return Colors.grey;
   }
 }

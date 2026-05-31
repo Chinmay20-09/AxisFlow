@@ -1,11 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:axisflow/core/constants/app_strings.dart';
-import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/data/models/transaction_model.dart';
+import 'package:axisflow/core/error_handler.dart';
 import 'package:axisflow/ui/widgets/tiles/transaction_tile.dart';
-import 'package:axisflow/ui/screens/add_transaction_sheet.dart';
+import 'package:axisflow/ui/screens/add_transaction.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 import 'package:axisflow/ui/screens/dashboard.dart';
@@ -170,12 +170,96 @@ class _ActivityScreenState extends State<ActivityScreen> {
   int _selectedChip = 0;
   final _searchController = TextEditingController();
   bool _searchFocused = false;
-
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
+
+  // Displays transaction actions (Edit / Delete) in a bottom sheet.
+  // Edit respects Transaction.isEditable; Delete is always available.
+  void _showTransactionActions(Transaction tx) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (tx.isEditable)
+                  ListTile(
+                    leading: const Icon(Icons.edit_outlined),
+                    title: const Text('Edit'),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => AddTransactionSheet(
+                          controller: widget.controller,
+                          existing: tx,
+                        ),
+                      );
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline),
+                  title: const Text('Delete'),
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    final confirm = await showDialog<bool>(
+                      context: ctx,
+                      builder: (dctx) => AlertDialog(
+                        title: const Text('Delete transaction'),
+                        content: const Text(
+                          'Are you sure you want to delete this transaction?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm != true) return;
+                    try {
+                      await widget.controller.delete(tx.id);
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Transaction deleted')),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      showErrorSnackBar(
+                        context,
+                        e,
+                        'Failed to delete transaction',
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,23 +295,44 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     final now = DateTime.now();
                     for (final t in txs) {
                       String label;
-                      if (now.year == t.createdAt.year && now.month == t.createdAt.month && now.day == t.createdAt.day) {
+                      if (now.year == t.createdAt.year &&
+                          now.month == t.createdAt.month &&
+                          now.day == t.createdAt.day) {
                         label = AppStrings.groupToday;
                       } else {
-                        final yesterday = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1));
-                        if (t.createdAt.year == yesterday.year && t.createdAt.month == yesterday.month && t.createdAt.day == yesterday.day) {
+                        final yesterday = DateTime(
+                          now.year,
+                          now.month,
+                          now.day,
+                        ).subtract(const Duration(days: 1));
+                        if (t.createdAt.year == yesterday.year &&
+                            t.createdAt.month == yesterday.month &&
+                            t.createdAt.day == yesterday.day) {
                           label = AppStrings.groupYesterday;
                         } else {
-                          label = '${t.createdAt.day}/${t.createdAt.month}/${t.createdAt.year}';
+                          label =
+                              '${t.createdAt.day}/${t.createdAt.month}/${t.createdAt.year}';
                         }
                       }
                       groups.putIfAbsent(label, () => []).add(t);
                     }
 
-                    final widgets = groups.entries.map<Widget>((e) => Padding(
-                          padding: const EdgeInsets.only(bottom: AppDims.sectionGap),
-                          child: _TransactionGroup(label: e.key, transactions: e.value, controller: widget.controller),
-                        )).toList();
+                    final widgets = groups.entries
+                        .map<Widget>(
+                          (e) => Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppDims.sectionGap,
+                            ),
+                            child: _TransactionGroup(
+                              label: e.key,
+                              transactions: e.value,
+                              controller: widget.controller,
+                              onTransactionLongPress: (tx) =>
+                                  _showTransactionActions(tx),
+                            ),
+                          ),
+                        )
+                        .toList();
 
                     widgets.add(const SizedBox(height: AppDims.sectionGap));
                     widgets.add(_AiInsightCard(controller: widget.controller));
@@ -265,68 +370,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ),
         ),
       ),
+      leading: MenuButton(
+        scaffoldKey: _scaffoldKey,
+        controller: widget.controller,
+      ),
       title: Row(
         children: [
-          MenuButton(scaffoldKey: _scaffoldKey),
-          const SizedBox(width: 8),
           Text(AppStrings.appBarBrand, style: AppTextStyles.appBarTitle),
         ],
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(
-            Icons.search,
-            color: AppColors.secondary.withValues(alpha: AppOpacity.high),
-          ),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: Icon(
-            Icons.tune,
-            color: AppColors.secondary.withValues(alpha: AppOpacity.high),
-          ),
-          onPressed: () {},
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: _Avatar(
-            url: AppCredentials.avatarUrl,
-            size: AppDims.avatarSize,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Avatar ─────────────────────────────────────────────────────────────────────
-class _Avatar extends StatelessWidget {
-  final String url;
-  final double size;
-
-  const _Avatar({required this.url, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipOval(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: AppOpacity.ghost),
-          ),
-        ),
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const Icon(
-            Icons.person,
-            color: AppColors.onSurfaceVariant,
-            size: 18,
-          ),
-        ),
       ),
     );
   }
@@ -442,9 +493,14 @@ class _TransactionGroup extends StatelessWidget {
   final String label;
   final List<Transaction> transactions;
   final TransactionController controller;
+  final Function(Transaction) onTransactionLongPress;
 
-  // ignore: unused_element_parameter
-  const _TransactionGroup({required this.label, required this.transactions, required this.controller, super.key});
+  const _TransactionGroup({
+    required this.label,
+    required this.transactions,
+    required this.controller,
+    required this.onTransactionLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -467,31 +523,7 @@ class _TransactionGroup extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: AppDims.groupSpacing),
                   child: TransactionTile(
                     transaction: tx,
-                    onEdit: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => AddTransactionSheet(controller: controller, existing: tx),
-                      );
-                    },
-                    onDelete: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Delete transaction'),
-                          content: const Text('Are you sure you want to delete this transaction?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-                            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        await controller.delete(tx.id);
-                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
-                      }
-                    },
+                    onLongPress: () => onTransactionLongPress(tx),
                   ),
                 ),
               )
@@ -501,7 +533,6 @@ class _TransactionGroup extends StatelessWidget {
     );
   }
 }
-
 
 // ── AI Insight Card ────────────────────────────────────────────────────────────
 class _AiInsightCard extends StatefulWidget {
@@ -591,24 +622,26 @@ class _AiInsightCardState extends State<_AiInsightCard> {
                         duration: const Duration(milliseconds: 250),
                         curve: Curves.easeOut,
                         child: Row(
-                          children:[
+                          children: [
                             Text(
                               AppStrings.aiInsightCta,
                               style: AppTextStyles.aiCta,
                             ),
                             SizedBox(width: 6),
                             IconButton(
-  icon: Icon(Icons.arrow_forward),
-  color: AppColors.primary,
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AxisFlowInsightsScreen(controller: widget.controller),
-      ),
-    );
-  },
-),
+                              icon: Icon(Icons.arrow_forward),
+                              color: AppColors.primary,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AxisFlowInsightsScreen(
+                                      controller: widget.controller,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ],
                         ),
                       ),

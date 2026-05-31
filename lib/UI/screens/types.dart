@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
+import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 
 void main() {
   runApp(const AxisFlowApp());
@@ -13,7 +15,6 @@ class AxisFlowApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AxisFlow - Categories',
-      debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF05070A),
         colorScheme: const ColorScheme.dark(
@@ -93,6 +94,7 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   // Start with "Food" selected to match the HTML default.
   final Set<String> _selected = {'food'};
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   void _toggle(String id) {
     setState(() {
@@ -112,6 +114,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: AppDrawer(controller: widget.controller!, selectedIndex: 2),
+
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
@@ -119,6 +124,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             slivers: [
               // ── Header ──────────────────────────────────────────────────────
               SliverAppBar(
+                leading: MenuButton(
+                  scaffoldKey: _scaffoldKey,
+                  controller: widget.controller,
+                ),
+
                 pinned: true,
                 backgroundColor: AppColors.surface.withValues(alpha: 0.85),
                 elevation: 0,
@@ -127,10 +137,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                     child: const SizedBox.expand(),
                   ),
-                ),
-                leading: const Icon(
-                  Icons.arrow_back,
-                  color: AppColors.onSurface,
                 ),
                 title: const Text(
                   'Categories',
@@ -141,12 +147,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     letterSpacing: -0.02 * 24,
                   ),
                 ),
-                actions: const [
-                  Padding(
-                    padding: EdgeInsets.only(right: 16),
-                    child: Icon(Icons.reorder, color: AppColors.onSurface),
-                  ),
-                ],
               ),
 
               // ── Subtitle ────────────────────────────────────────────────────

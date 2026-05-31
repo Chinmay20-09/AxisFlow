@@ -1,6 +1,7 @@
 // lib/ui/widgets/summary_card.dart
 import 'package:flutter/material.dart';
 import 'package:axisflow/core/theme/app_theme.dart';
+import 'package:axisflow/core/formatters.dart';
 
 class SummaryCard extends StatelessWidget {
   final double income;
@@ -75,7 +76,7 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${net >= 0 ? '+' : ''}₹${formatAmount(net)}',
+            '${net >= 0 ? '+' : ''}${formatCompactCurrency(net)}',
             style: TextStyle(
               color: net >= 0 ? AppTheme.income : AppTheme.expense,
               fontSize: 34,
@@ -139,7 +140,7 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '₹${formatAmount(value)}',
+            '\${formatCompactCurrency(value)}',
             style: TextStyle(
               color: color,
               fontSize: 14,
@@ -150,17 +151,5 @@ class SummaryCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String formatAmount(double val) {
-    if (val.abs() >= 10000000) {
-      return '${(val / 1000000).toStringAsFixed(1)}cr';
-    } else if (val.abs() >= 100000) {
-      return '${(val / 100000).toStringAsFixed(1)}l';
-    } else if (val.abs() >= 1000) {
-      return '${(val / 1000).toStringAsFixed(1)}k';
-    }
-
-    return val.toStringAsFixed(0);
   }
 }
