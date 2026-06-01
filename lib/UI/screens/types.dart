@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/ui/widgets/cards/ai_insight_card.dart';
 
 void main() {
   runApp(const AxisFlowApp());
@@ -27,21 +29,7 @@ class AxisFlowApp extends StatelessWidget {
   }
 }
 
-// ── Colour tokens ──────────────────────────────────────────────────────────────
-class AppColors {
-  static const background = Color(0xFF05070A);
-  static const surface = Color(0xFF111417);
-  static const surfaceContainer = Color(0xFF1D2023);
-  static const surfaceContainerLow = Color(0xFF191C1F);
-  static const surfaceContainerHigh = Color(0xFF282A2E);
-  static const surfaceVariant = Color(0xFF323539);
-  static const onSurface = Color(0xFFE1E2E7);
-  static const onSurfaceVariant = Color(0xFFBCCABB);
-  static const primary = Color(0xFF4ADE80);
-  static const onPrimary = Color(0xFF003919);
-  static const secondary = Color(0xFFC4C6CE);
-  static const outlineVariant = Color(0xFF3D4A3E);
-}
+// Using shared AppColors from core/app_colors.dart
 
 // ── Data model ─────────────────────────────────────────────────────────────────
 class CategoryItem {
@@ -168,7 +156,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _AiInsightCard(),
+                  child: AiInsightCard(
+                    message:
+                        'Most used categories are already prioritized based on your monthly spending flow.',
+                  ),
                 ),
               ),
 
@@ -225,79 +216,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 }
 
-// ── AI Insight Card ────────────────────────────────────────────────────────────
-class _AiInsightCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            blurRadius: 40,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: AppColors.primary,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'AI INSIGHT',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.05 * 11,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Most used categories are already prioritized based on your monthly spending flow.',
-                        style: TextStyle(
-                          color: AppColors.onSurface,
-                          fontSize: 14,
-                          height: 1.43,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Category Card ──────────────────────────────────────────────────────────────
 class _CategoryCard extends StatefulWidget {
   final CategoryItem item;
@@ -309,7 +227,6 @@ class _CategoryCard extends StatefulWidget {
     required this.selected,
     required this.onTap,
   });
-
   @override
   State<_CategoryCard> createState() => _CategoryCardState();
 }
@@ -577,7 +494,7 @@ class _BottomPanel extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           alignment: Alignment.center,
-                          child: const Text(
+                          child: Text(
                             'Save Shortcuts',
                             style: TextStyle(
                               color: AppColors.onPrimary,

@@ -1,9 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/ui/widgets/tiles/settings_tile.dart';
+import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -31,21 +34,7 @@ class AxisFlowApp extends StatelessWidget {
   }
 }
 
-// ── Colour tokens ──────────────────────────────────────────────────────────────
-class AppColors {
-  static const background = Color(0xFF111417);
-  static const surface = Color(0xFF111417);
-  static const surfaceContainer = Color(0xFF1D2023);
-  static const surfaceContainerHigh = Color(0xFF282A2E);
-  static const onSurface = Color(0xFFE1E2E7);
-  static const onSurfaceVariant = Color(0xFFBCCABB);
-  static const primary = Color(0xFF4ADE80);
-  static const primaryContainer = Color(0xFF4ADE80);
-  static const onPrimary = Color(0xFF003919);
-  static const secondary = Color(0xFFC4C6CE);
-  static const outlineVariant = Color(0xFF3D4A3E);
-  static const error = Color(0xFFFFB4AB);
-}
+// Using shared AppColors from core/app_colors.dart
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class ProfileScreen extends StatefulWidget {
@@ -323,11 +312,11 @@ class _SettingsGrid extends StatelessWidget {
             _SettingsSection(
               label: 'Account',
               items: [
-                _SettingsTile(
+                SettingsTile(
                   icon: Icons.account_balance,
-                  label: 'Manage linked banks',
+                  title: 'Manage linked banks',
                 ),
-                _SettingsTile(icon: Icons.shield, label: 'Security'),
+                SettingsTile(icon: Icons.shield, title: 'Security'),
               ],
             ),
 
@@ -342,13 +331,13 @@ class _SettingsGrid extends StatelessWidget {
             _SettingsSection(
               label: 'Intelligence',
               items: [
-                _SettingsTile(
+                SettingsTile(
                   icon: Icons.monitor_heart,
-                  label: 'AI Insight Frequency',
+                  title: 'AI Insight Frequency',
                 ),
-                _SettingsTile(
+                SettingsTile(
                   icon: Icons.category,
-                  label: 'Auto-categorization',
+                  title: 'Auto-categorization',
                 ),
               ],
             ),
@@ -358,8 +347,8 @@ class _SettingsGrid extends StatelessWidget {
             _SettingsSection(
               label: 'Support',
               items: [
-                _SettingsTile(icon: Icons.help, label: 'Help Center'),
-                _SettingsTile(icon: Icons.info, label: 'About AxisFlow'),
+                SettingsTile(icon: Icons.help, title: 'Help Center'),
+                SettingsTile(icon: Icons.info, title: 'About AxisFlow'),
               ],
             ),
           ],
@@ -393,7 +382,7 @@ class _SettingsSection extends StatelessWidget {
             ),
           ),
         ),
-        _GlassCard(
+        GlassCard(
           child: Column(
             children: [
               for (int i = 0; i < items.length; i++) ...[
@@ -411,90 +400,6 @@ class _SettingsSection extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Glass card container ───────────────────────────────────────────────────────
-class _GlassCard extends StatelessWidget {
-  final Widget child;
-
-  const _GlassCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Settings Tile ──────────────────────────────────────────────────────────────
-class _SettingsTile extends StatefulWidget {
-  final IconData icon;
-  final String label;
-
-  const _SettingsTile({required this.icon, required this.label});
-
-  @override
-  State<_SettingsTile> createState() => _SettingsTileState();
-}
-
-class _SettingsTileState extends State<_SettingsTile> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: () {},
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          color: _hovered
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          child: Row(
-            children: [
-              Icon(
-                widget.icon,
-                size: 22,
-                color: _hovered
-                    ? AppColors.primary
-                    : AppColors.onSurfaceVariant,
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Text(
-                  widget.label,
-                  style: const TextStyle(
-                    color: AppColors.onSurface,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.onSurfaceVariant,
-                size: 20,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

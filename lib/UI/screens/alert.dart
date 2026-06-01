@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/core/constants/app_strings.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
@@ -35,21 +36,7 @@ class AxisFlowApp extends StatelessWidget {
   }
 }
 
-// ── Colour tokens ──────────────────────────────────────────────────────────────
-class AppColors {
-  static const background = Color(0xFF05070A);
-  static const surface = Color(0xFF111417);
-  static const surfaceContainer = Color(0xFF1D2023);
-  static const surfaceContainerHigh = Color(0xFF282A2E);
-  static const secondaryContainer = Color(0xFF464950);
-  static const onSurface = Color(0xFFE1E2E7);
-  static const onSurfaceVariant = Color(0xFFBCCABB);
-  static const primary = Color(0xFF4ADE80);
-  static const primaryContainer = Color(0xFF4ADE80);
-  static const onPrimary = Color(0xFF003919);
-  static const secondary = Color(0xFFC4C6CE);
-  static const amber = Color(0xFFFBBF24);
-}
+// Using shared AppColors from core/app_colors.dart
 
 // ── Data models ────────────────────────────────────────────────────────────────
 enum AlertType { priority, achievement, neutral, empty }

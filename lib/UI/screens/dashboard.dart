@@ -14,6 +14,8 @@ import 'package:axisflow/ui/widgets/cards/analytics_card.dart';
 import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/ui/widgets/tiles/allocation_tile.dart';
+import 'package:axisflow/ui/widgets/common/section_header.dart';
 
 class AxisFlowInsightsScreen extends StatelessWidget {
   final TransactionController controller;
@@ -124,7 +126,7 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Expanded(
-                              child: _DashboardSectionHeader(
+                              child: SectionHeader(
                                 title: 'Spending Trends',
                                 subtitle: 'Where your money went this month',
                               ),
@@ -182,7 +184,8 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                                 width: AppSizes.chartDiameter,
                                 child: PieChart(
                                   PieChartData(
-                                    centerSpaceRadius: 50,
+                                    centerSpaceRadius:
+                                        AppSizes.chartCenterRadius,
                                     sectionsSpace: 2,
                                     sections: topCategories
                                         .take(3)
@@ -312,75 +315,6 @@ class _DashboardTopBar extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _DashboardSectionHeader extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _DashboardSectionHeader({
-    required this.title,
-    required this.subtitle,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: AppTextStyles.sectionTitle),
-        const SizedBox(height: AppSpacing.xs),
-        Text(subtitle, style: AppTextStyles.bodyMuted),
-      ],
-    );
-  }
-}
-
-class AllocationTile extends StatelessWidget {
-  final String title;
-  final String value;
-  final Color dotColor;
-
-  const AllocationTile({
-    required this.title,
-    required this.value,
-    required this.dotColor,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(title, style: TextStyle(color: AppColors.textPrimary)),
-            ],
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

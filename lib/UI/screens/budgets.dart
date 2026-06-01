@@ -1,8 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
+import 'package:axisflow/ui/widgets/cards/ai_insight_card.dart';
+import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'package:axisflow/core/formatters.dart';
 
 void main() {
@@ -31,24 +34,7 @@ class AxisFlowApp extends StatelessWidget {
   }
 }
 
-// ── Colour tokens ──────────────────────────────────────────────────────────────
-class AppColors {
-  static const background = Color(0xFF05070A);
-  static const surface = Color(0xFF111417);
-  static const surfaceContainer = Color(0xFF1D2023);
-  static const surfaceContainerHigh = Color(0xFF282A2E);
-  static const surfaceContainerHighest = Color(0xFF323539);
-  static const secondaryContainer = Color(0xFF464950);
-  static const errorContainer = Color(0xFF93000A);
-  static const onSurface = Color(0xFFE1E2E7);
-  static const onSurfaceVariant = Color(0xFFBCCABB);
-  static const primary = Color(0xFF4ADE80);
-  static const primaryContainer = Color(0xFF4ADE80);
-  static const onPrimary = Color(0xFF003919);
-  static const secondary = Color(0xFFC4C6CE);
-  static const error = Color(0xFFFFB4AB);
-  static const outline = Color(0xFF869486);
-}
+// Using shared AppColors from core/app_colors.dart
 
 // ── Data model ─────────────────────────────────────────────────────────────────
 enum BudgetStatus { caution, onTrack, critical, pending }
@@ -309,7 +295,7 @@ class _BentoRow extends StatelessWidget {
                 analytics.totalPending;
             final remainingText = formatCompactCurrency(remainingValue);
 
-            return _GlassCard(
+            return GlassCard(
               child: Stack(
                 children: [
                   // Ambient glow blob
@@ -395,7 +381,19 @@ class _BentoRow extends StatelessWidget {
         const SizedBox(height: 12),
 
         // AI Insight card (driven from analytics)
-        _AiInsightCard(controller: controller),
+        AnimatedBuilder(
+          animation: controller,
+          builder: (ctx, _) {
+            final analytics = controller.analytics;
+            final top = analytics.topExpenseCategories.isNotEmpty
+                ? analytics.topExpenseCategories.first
+                : null;
+            final insightText = top != null
+                ? 'Your top category is "${top.category}" (${formatCompactCurrency(top.total)}). ${analytics.summaryInsight}'
+                : analytics.summaryInsight;
+            return AiInsightCard(message: insightText);
+          },
+        ),
       ],
     );
   }
@@ -492,104 +490,6 @@ class _PillButton extends StatelessWidget {
   }
 }
 
-// ── AI Insight card ────────────────────────────────────────────────────────────
-class _AiInsightCard extends StatelessWidget {
-  final TransactionController controller;
-  const _AiInsightCard({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final analytics = controller.analytics;
-    final top = analytics.topExpenseCategories.isNotEmpty
-        ? analytics.topExpenseCategories.first
-        : null;
-    final insightText = top != null
-        ? 'Your top category is "${top.category}" (${formatCompactCurrency(top.total)}). ${analytics.summaryInsight}'
-        : analytics.summaryInsight;
-
-    final lastTx = analytics.completedTransactions.isNotEmpty
-        ? analytics.completedTransactions.last.createdAt
-        : null;
-    final minutesAgo = lastTx == null
-        ? 'just now'
-        : '${DateTime.now().difference(lastTx).inMinutes} minutes ago';
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.topLeft,
-              radius: 1.2,
-              colors: [
-                AppColors.primary.withValues(alpha: (0.03)),
-                Colors.white.withValues(alpha: (0.02)),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: (0.1)),
-            ),
-          ),
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: const [
-                  Icon(Icons.auto_awesome, color: AppColors.primary, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'AI INSIGHT',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.08 * 11,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                insightText,
-                style: const TextStyle(
-                  color: AppColors.onSurface,
-                  fontSize: 16,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(
-                    Icons.verified,
-                    size: 16,
-                    color: AppColors.onSurfaceVariant.withValues(alpha: (0.6)),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Calculated $minutesAgo',
-                    style: TextStyle(
-                      color: AppColors.onSurfaceVariant.withValues(
-                        alpha: (0.6),
-                      ),
-                      fontSize: 11,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Budget card ────────────────────────────────────────────────────────────────
 class _BudgetCard extends StatefulWidget {
   final BudgetItem item;
@@ -655,7 +555,7 @@ class _BudgetCardState extends State<_BudgetCard>
       case BudgetStatus.critical:
         return Row(
           children: [
-            const Icon(Icons.error, color: AppColors.error, size: 14),
+            const Icon(Icons.error, color: AppColors.amber, size: 14),
             const SizedBox(width: 6),
             const Text(
               'CRITICAL: ALMOST EXCEEDED',
@@ -814,31 +714,6 @@ class _BudgetCardState extends State<_BudgetCard>
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Reusable glass card ────────────────────────────────────────────────────────
-class _GlassCard extends StatelessWidget {
-  final Widget child;
-
-  const _GlassCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: (0.04)),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: (0.08))),
-          ),
-          child: child,
         ),
       ),
     );

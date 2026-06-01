@@ -5,6 +5,8 @@ import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 import 'package:axisflow/data/local/settings_db.dart';
 import 'package:axisflow/data/services/export_service.dart';
+import 'package:axisflow/ui/screens/import_screen.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -40,28 +42,7 @@ class AxisFlowApp extends StatelessWidget {
   }
 }
 
-// ── Colour tokens ──────────────────────────────────────────────────────────────
-class AppColors {
-  static const background = Color(0xFF111417);
-  static const surface = Color(0xFF111417);
-  static const surfaceContainer = Color(0xFF1D2023);
-  static const surfaceContainerHigh = Color(0xFF282A2E);
-  static const secondaryContainer = Color(0xFF464950);
-  static const onSurface = Color(0xFFE1E2E7);
-  static const onSurfaceVariant = Color(0xFFBCCABB);
-  static const primary = Color(0xFF4ADE80);
-  static const primaryContainer = Color(0xFF4ADE80);
-  static const onPrimary = Color(0xFF003919);
-  static const secondary = Color(0xFFC4C6CE);
-  static const error = Color(0xFFFFB4AB);
-  static const outlineVariant = Color(0xFF3D4A3E);
-
-  // Accent colour palette
-  static const accentGreen = Color(0xFF4ADE80);
-  static const accentBlue = Color(0xFF3B82F6);
-  static const accentPurple = Color(0xFFA855F7);
-  static const accentAmber = Color(0xFFF59E0B);
-}
+// Using shared AppColors from core/theme/appAppColorsolors.dart
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class SettingsScreen extends StatefulWidget {
@@ -79,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _accentIndex = 0;
 
   // Finance
-  String _currency = 'USD (\$)';
+  String _currency = 'INR (₹)';
   String _firstDay = '1st';
 
   // AI
@@ -116,13 +97,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // If persistence not available, fall back to defaults
     }
   }
-
-  static const _accentColors = [
-    AppColors.accentGreen,
-    AppColors.accentBlue,
-    AppColors.accentPurple,
-    AppColors.accentAmber,
-  ];
 
   static const _freqLabels = ['Daily', 'Weekly', 'Adaptive'];
 
@@ -226,7 +200,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _AppearanceCard(
                   darkMode: _darkMode,
                   accentIndex: _accentIndex,
-                  accentColors: _accentColors,
+                  accentColors: const [
+                    AppColors.accentGreen,
+                    AppColors.accentBlue,
+                    AppColors.accentPurple,
+                    AppColors.accentAmber,
+                  ],
                   onDarkModeToggle: () =>
                       setState(() => _darkMode = !_darkMode),
                   onAccentSelected: (i) => setState(() => _accentIndex = i),
@@ -300,12 +279,17 @@ class _GlassCard extends StatelessWidget {
 }
 
 // ── Card header row ────────────────────────────────────────────────────────────
-class _CardHeader extends StatelessWidget {
+class AppColorsardHeader extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget? trailing;
 
-  const _CardHeader({required this.icon, required this.title, this.trailing});
+  // ignore: use_key_in_widget_constructors
+  const AppColorsardHeader({
+    required this.icon,
+    required this.title,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -428,7 +412,7 @@ class _AppearanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _CardHeader(icon: Icons.palette, title: 'Appearance'),
+          const AppColorsardHeader(icon: Icons.palette, title: 'Appearance'),
           const SizedBox(height: 32),
 
           // Dark mode row
@@ -539,7 +523,10 @@ class _FinanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _CardHeader(icon: Icons.account_balance, title: 'Finance'),
+          const AppColorsardHeader(
+            icon: Icons.account_balance,
+            title: 'Finance',
+          ),
           const SizedBox(height: 32),
 
           Row(
@@ -597,7 +584,7 @@ class _AiCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardHeader(
+          AppColorsardHeader(
             icon: Icons.auto_awesome,
             title: 'AI Intelligence',
             trailing: Container(
@@ -706,17 +693,17 @@ class _PrivacyCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _CardHeader(icon: Icons.security, title: 'Privacy'),
+          const AppColorsardHeader(icon: Icons.security, title: 'Privacy'),
           const SizedBox(height: 32),
 
           // Data Export
           _PrivacyTile(
-            icon: Icons.download,
-            label: 'Data Export',
-            labelColor: AppColors.error,
-            iconColor: AppColors.error,
-            chevronColor: AppColors.error.withValues(alpha: 0.5),
-            hoverColor: AppColors.error.withValues(alpha: 0.05),
+            icon: Icons.upload_file,
+            label: 'Export CSV',
+            labelColor: AppColors.primary,
+            iconColor: AppColors.primary,
+            chevronColor: AppColors.primary.withValues(alpha: 0.5),
+            hoverColor: AppColors.primary.withValues(alpha: 0.05),
             onTap: () async {
               final messenger = ScaffoldMessenger.of(context);
 
@@ -741,11 +728,31 @@ class _PrivacyCard extends StatelessWidget {
 
           const SizedBox(height: 4),
 
+          // Data Import
+          _PrivacyTile(
+            icon: Icons.download,
+            label: 'Import CSV',
+            labelColor: AppColors.primary,
+            iconColor: AppColors.primary,
+            chevronColor: AppColors.primary.withValues(alpha: 0.5),
+            hoverColor: AppColors.primary.withValues(alpha: 0.05),
+            onTap: () async {
+              // Open Import screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (c) => ImportScreen(controller: controller),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 4),
+
           // Delete Account
           _PrivacyTile(
             icon: Icons.delete_forever,
             label: 'Delete Account',
-            labelColor: AppColors.error,
+            labelColor: AppColors.secondary,
             iconColor: AppColors.error,
             chevronColor: AppColors.error.withValues(alpha: 0.5),
             hoverColor: AppColors.error.withValues(alpha: 0.05),

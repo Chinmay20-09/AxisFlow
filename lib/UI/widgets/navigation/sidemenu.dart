@@ -8,18 +8,8 @@ import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/ui/screens/profile.dart';
 import 'package:axisflow/ui/screens/dashboard.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/ui/screens/transaction.dart';
-
-class _C {
-  static const surface = Color(0xFF181920);
-  static const card = Color(0xFF1E2029);
-  static const border = Color(0xFF2A2C38);
-  static const accent = Color(0xFF3FDC84); // vivid green  (AxisFlow green)
-  static const accentRed = Color(0xFFFF6B6B); // salmon-red
-  static const muted = Color(0xFF8B8FA8);
-  static const label = Color(0xFFE4E6F0);
-}
-
 // ─────────────────────────────────────────────
 //  DATA MODEL
 // ─────────────────────────────────────────────
@@ -161,7 +151,7 @@ class _AppDrawerState extends State<AppDrawer>
   Widget build(BuildContext context) {
     return Drawer(
       width: 272,
-      backgroundColor: _C.surface,
+      backgroundColor: AppColors.surface,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +170,7 @@ class _AppDrawerState extends State<AppDrawer>
                 style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 2,
-                  color: _C.muted,
+                  color: AppColors.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -221,7 +211,7 @@ class _AppDrawerState extends State<AppDrawer>
                 style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 2,
-                  color: _C.muted,
+                  color: AppColors.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -280,8 +270,8 @@ class _ProfileHeader extends StatelessWidget {
             height: 46,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: _C.accent, width: 1.8),
-              color: _C.card,
+              border: Border.all(color: AppColors.accent, width: 1.8),
+              color: AppColors.card,
             ),
             child: const ClipOval(
               child: Image(
@@ -298,7 +288,7 @@ class _ProfileHeader extends StatelessWidget {
                 Text(
                   AppCredentials.userName,
                   style: const TextStyle(
-                    color: _C.label,
+                    color: AppColors.label,
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                     letterSpacing: 0.3,
@@ -308,7 +298,7 @@ class _ProfileHeader extends StatelessWidget {
                 Text(
                   AppCredentials.userRole,
                   style: TextStyle(
-                    color: _C.muted,
+                    color: AppColors.onSurfaceVariant,
                     fontSize: 11,
                     letterSpacing: 0.4,
                   ),
@@ -322,9 +312,9 @@ class _ProfileHeader extends StatelessWidget {
             height: 8,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: _C.accent,
+              color: AppColors.accent,
               boxShadow: [
-                BoxShadow(color: _C.accent, blurRadius: 6, spreadRadius: 1),
+                BoxShadow(color: AppColors.accent, blurRadius: 6, spreadRadius: 1),
               ],
             ),
           ),
@@ -386,13 +376,13 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: active
-                      ? _C.accent.withValues(alpha: 0.12)
+                      ? AppColors.accent.withValues(alpha: 0.12)
                       : _hovered
-                      ? _C.card
+                      ? AppColors.card
                       : Colors.transparent,
                   border: Border.all(
                     color: active
-                        ? _C.accent.withValues(alpha: 0.35)
+                        ? AppColors.accent.withValues(alpha: 0.35)
                         : Colors.transparent,
                     width: 1,
                   ),
@@ -403,7 +393,7 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                     Icon(
                       widget.item.icon,
                       size: 20,
-                      color: active ? _C.accent : _C.muted,
+                      color: active ? AppColors.accent : AppColors.muted,
                     ),
                     const SizedBox(width: 14),
                     // Label
@@ -415,7 +405,7 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                           fontWeight: active
                               ? FontWeight.w700
                               : FontWeight.w400,
-                          color: active ? _C.label : _C.muted,
+                          color: active ? AppColors.label : AppColors.muted,
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -428,17 +418,17 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: _C.accentRed.withValues(alpha: 0.18),
+                          color: AppColors.accentRed.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _C.accentRed.withValues(alpha: 0.5),
+                            color: AppColors.accentRed.withValues(alpha: 0.5),
                             width: 1,
                           ),
                         ),
                         child: Text(
                           widget.item.badge!,
                           style: const TextStyle(
-                            color: _C.accentRed,
+                            color: AppColors.accentRed,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -452,7 +442,7 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                         height: 5,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _C.accent,
+                          color: AppColors.accent,
                         ),
                       ),
                     ],
@@ -475,7 +465,7 @@ class _SectionDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Divider(color: _C.border, height: 1, thickness: 1),
+      child: Divider(color: AppColors.border, height: 1, thickness: 1),
     );
   }
 }
@@ -506,7 +496,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: _hovered
-                  ? _C.accentRed.withValues(alpha: 0.1)
+                  ? AppColors.accentRed.withValues(alpha: 0.1)
                   : Colors.transparent,
             ),
             child: Row(
@@ -514,7 +504,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
                 Icon(
                   Icons.logout_rounded,
                   size: 20,
-                  color: _C.accentRed.withValues(alpha: 0.75),
+                  color: AppColors.accentRed.withValues(alpha: 0.75),
                 ),
                 const SizedBox(width: 14),
                 Text(
@@ -522,7 +512,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w400,
-                    color: _C.accentRed.withValues(alpha: 0.75),
+                    color: AppColors.accentRed.withValues(alpha: 0.75),
                     letterSpacing: 0.2,
                   ),
                 ),

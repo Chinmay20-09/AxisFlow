@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/core/constants/app_strings.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/data/models/transaction_model.dart';
@@ -9,6 +10,7 @@ import 'package:axisflow/ui/screens/add_transaction.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 import 'package:axisflow/ui/screens/dashboard.dart';
+import 'package:axisflow/ui/widgets/cards/ai_insight_card.dart';
 
 void main() {
   runApp(AxisFlowApp());
@@ -37,22 +39,7 @@ class AxisFlowApp extends StatelessWidget {
   }
 }
 
-// ── Colour tokens ──────────────────────────────────────────────────────────────
-class AppColors {
-  AppColors._();
-
-  static const background = Color(0xFF05070A);
-  static const surface = Color(0xFF111417);
-  static const surfaceContainer = Color(0xFF1D2023);
-  static const surfaceContainerHighest = Color(0xFF323539);
-  static const onSurface = Color(0xFFE1E2E7);
-  static const onSurfaceVariant = Color(0xFFBCCABB);
-  static const primary = Color(0xFF4ADE80);
-  static const onPrimary = Color(0xFF003919);
-  static const secondary = Color(0xFFC4C6CE);
-  static const error = Color(0xFFFFB4AB);
-  static const outline = Color(0xFF869486);
-}
+// Using shared AppColors from core/app_colors.dart
 
 // ── Opacity constants (replaces magic numbers) ─────────────────────────────────
 class AppOpacity {
@@ -335,7 +322,21 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         .toList();
 
                     widgets.add(const SizedBox(height: AppDims.sectionGap));
-                    widgets.add(_AiInsightCard(controller: widget.controller));
+                    widgets.add(
+                      AiInsightCard(
+                        message: widget.controller.analytics.summaryInsight,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AxisFlowInsightsScreen(
+                                controller: widget.controller,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
 
                     return Column(children: widgets);
                   },
@@ -530,129 +531,6 @@ class _TransactionGroup extends StatelessWidget {
               .toList(),
         ),
       ],
-    );
-  }
-}
-
-// ── AI Insight Card ────────────────────────────────────────────────────────────
-class _AiInsightCard extends StatefulWidget {
-  final TransactionController controller;
-
-  const _AiInsightCard({required this.controller});
-
-  @override
-  State<_AiInsightCard> createState() => _AiInsightCardState();
-}
-
-class _AiInsightCardState extends State<_AiInsightCard> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppDims.cardRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: AppDims.backdropBlur,
-            sigmaY: AppDims.backdropBlur,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: AppOpacity.glassCard),
-              borderRadius: BorderRadius.circular(AppDims.cardRadius),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: AppOpacity.glassBorder),
-              ),
-            ),
-            child: Stack(
-              children: [
-                // Ambient glow blob
-                Positioned(
-                  top: -96,
-                  right: -96,
-                  child: Container(
-                    width: AppDims.glowSize,
-                    height: AppDims.glowSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(
-                            alpha: AppOpacity.glassBlur,
-                          ),
-                          blurRadius: AppDims.glowBlur,
-                          spreadRadius: AppDims.glowBlur,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(AppDims.insightPadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: const [
-                          Icon(
-                            Icons.auto_awesome,
-                            color: AppColors.primary,
-                            size: 18,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            AppStrings.aiInsightLabel,
-                            style: AppTextStyles.aiLabel,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        AppStrings.aiInsightBody,
-                        style: AppTextStyles.aiBody,
-                      ),
-                      const SizedBox(height: 16),
-                      AnimatedSlide(
-                        offset: Offset(_hovered ? 0.04 : 0, 0),
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeOut,
-                        child: Row(
-                          children: [
-                            Text(
-                              AppStrings.aiInsightCta,
-                              style: AppTextStyles.aiCta,
-                            ),
-                            SizedBox(width: 6),
-                            IconButton(
-                              icon: Icon(Icons.arrow_forward),
-                              color: AppColors.primary,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => AxisFlowInsightsScreen(
-                                      controller: widget.controller,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

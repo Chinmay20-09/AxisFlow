@@ -31,35 +31,8 @@ class AppStrings {
 
   static const chartHeights = [40.0, 60.0, 85.0, 50.0, 70.0, 95.0, 30.0];
 
-  static const List<String> incomeCategories = [
-    'Salary 💰',
-    'Freelance 💻',
-    'Business 📈',
-    'Investment 📊',
-    'Gift 🎁',
-    'Refund 💵',
-    'Bonus 💸',
-    'Rental 🏠',
-    'Scholarship 🎓',
-    'Other 🪙',
-  ];
-
-  static const List<String> expenseCategories = [
-    'Food 🍔',
-    'Transport 🚗',
-    'Bills 🧾',
-    'Shopping 🛍️',
-    'Health 🏥',
-    'Education 🎓',
-    'Entertainment 🎬',
-    'Travel ✈️',
-    'Subscription 📱',
-    'Rent 🔑',
-    'EMI 💳',
-    'Family 👨‍👩‍👧‍👦',
-    'Personal 👤',
-    'Other 🪙',
-  ];
+  // Category lists moved to lib/core/constants/categories.dart as CategoryItem
+  // Use getCategoryDisplay(name) and getCategoryIcon(name) for UI display.
 
   static const appActivityTitle = 'AxisFlow | Activity';
   static const appBarBrand = 'AxisFlow';

@@ -14,4 +14,23 @@ abstract class AppColors {
   static const Color onSurfaceVariant = Color(0xFF8888AA);
   static const Color textSecondary = Color(0xFF8888AA);
   static const Color accent = Color(0xFFFFFFFF);
+  static const Color amber = Color(0xFFFBBF24);
+  static const Color error = Color(0xFFFFB4AB);
+  static const Color secondaryContainer = Color(0xFF464950);
+  static const Color surfaceContainer = Color(0xFF1D2023);
+
+  static const Color accentGreen = Color(0xFF6BFB9A);
+  static const Color accentBlue = Color(0xFF7DD3FC);
+  static const Color accentPurple = Color(0xFFB794F4);
+  static const Color accentAmber = Color(0xFFFBBF24);
+  static const Color onPrimary = Color(0xFF003919);
+  static const Color outline = Color(0xFF869486);
+  static const Color primaryContainer = Color(0xFF4ADE80);
+  static const Color errorContainer = Color(0xFF93000A);
+  static const Color surfaceContainerLow = Color(0xFF191C1F);
+  static const Color outlineVariant = Color(0xFF3D4A3E);
+  static const Color muted = Color(0xFF8B8FA8);
+  static const Color label = Color(0xFFE4E6F0);
+  static const Color accentRed = Color(0xFFFF6B6B);
+  static const Color border = Color(0xFF2A2C38);
 }

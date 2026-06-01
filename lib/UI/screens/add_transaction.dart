@@ -5,6 +5,7 @@ import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/core/theme/app_theme.dart';
 import 'package:axisflow/data/models/transaction_model.dart';
 import 'package:axisflow/core/error_handler.dart';
+import 'package:axisflow/core/constants/categories.dart';
 
 /// Lightweight replacement for the old AddTransactionSheet.
 /// Keeps the same public API: AddTransactionSheet(controller, existing?)
@@ -31,13 +32,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   bool _isPending = false;
   bool _saving = false;
 
-  static const List<String> _incomeCats = ['Salary', 'Bonus', 'Interest'];
-  static const List<String> _expenseCats = [
-    'Shopping',
-    'Food',
-    'Bills',
-    'Transport',
-  ];
+  List<String> get _incomeCats => incomeCategories.map((c) => c.name).toList();
+  List<String> get _expenseCats =>
+      expenseCategories.map((c) => c.name).toList();
 
   List<String> get _currentCategories =>
       _type == TransactionType.income ? _incomeCats : _expenseCats;
