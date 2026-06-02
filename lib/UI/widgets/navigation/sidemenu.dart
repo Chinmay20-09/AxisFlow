@@ -3,7 +3,7 @@ import 'package:axisflow/ui/screens/alert.dart';
 import 'package:axisflow/ui/screens/budgets.dart';
 import 'package:axisflow/ui/screens/home_screen.dart';
 import 'package:axisflow/ui/screens/settings.dart';
-import 'package:axisflow/ui/screens/types.dart';
+import 'package:axisflow/ui/screens/categories.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/ui/screens/profile.dart';

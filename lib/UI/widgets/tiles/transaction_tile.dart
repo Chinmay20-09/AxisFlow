@@ -8,7 +8,7 @@ import 'package:axisflow/core/constants/app_sizes.dart';
 import 'package:axisflow/core/constants/app_spacing.dart';
 import 'package:axisflow/core/constants/app_radius.dart';
 import 'package:axisflow/core/theme/app_text_styles.dart';
-import 'package:axisflow/core/constants/categories.dart';
+import 'package:axisflow/ui/screens/categories.dart';
 
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;

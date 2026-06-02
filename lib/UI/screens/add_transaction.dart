@@ -5,7 +5,8 @@ import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/core/theme/app_theme.dart';
 import 'package:axisflow/data/models/transaction_model.dart';
 import 'package:axisflow/core/error_handler.dart';
-import 'package:axisflow/core/constants/categories.dart';
+import 'package:axisflow/ui/screens/categories.dart';
+import 'package:axisflow/data/local/settings_db.dart';
 
 /// Lightweight replacement for the old AddTransactionSheet.
 /// Keeps the same public API: AddTransactionSheet(controller, existing?)
@@ -32,9 +33,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   bool _isPending = false;
   bool _saving = false;
 
-  List<String> get _incomeCats => incomeCategories.map((c) => c.name).toList();
-  List<String> get _expenseCats =>
-      expenseCategories.map((c) => c.name).toList();
+  // Favorite categories loaded from settings
+  List<String> _favoriteCats = <String>[];
+
+  // Dynamic category lists (initialised from defaults, loaded from settings)
+  List<String> _incomeCatsList = incomeCategories.map((c) => c.name).toList();
+  List<String> _expenseCatsList = expenseCategories.map((c) => c.name).toList();
+
+  List<String> get _incomeCats => _incomeCatsList;
+  List<String> get _expenseCats => _expenseCatsList;
 
   List<String> get _currentCategories =>
       _type == TransactionType.income ? _incomeCats : _expenseCats;
@@ -52,6 +59,26 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     } else {
       _category = _incomeCats.first;
     }
+    _loadFavorites();
+    _loadCategoryLists();
+  }
+
+  Future<void> _loadCategoryLists() async {
+    try {
+      final inc = await loadIncomeCategoryNames();
+      final exp = await loadExpenseCategoryNames();
+      if (mounted) {
+        setState(() {
+          _incomeCatsList = inc;
+          _expenseCatsList = exp;
+          if (!_currentCategories.contains(_category)) {
+            _category = _currentCategories.first;
+          }
+        });
+      }
+    } catch (_) {
+      // ignore
+    }
   }
 
   @override
@@ -59,6 +86,20 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     _amountCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      await SettingsDB.init();
+      final fav = SettingsDB.get<List>('categories.favorites', <String>[]);
+      if (mounted) {
+        setState(() {
+          _favoriteCats = (fav ?? <String>[]) .cast<String>();
+        });
+      }
+    } catch (_) {
+      // ignore
+    }
   }
 
   bool get _canSave {
@@ -215,6 +256,37 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               ),
 
               const SizedBox(height: 8),
+
+              // Favorite categories quick-select
+              Builder(builder: (context) {
+                final favForType = _favoriteCats.where((f) => _currentCategories.contains(f)).toList();
+                if (favForType.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Favorites', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      children: favForType.map((name) {
+                        return GestureDetector(
+                          onTap: () => setState(() => _category = name),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8, bottom: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                                                          color: _category == name ? AppTheme.primary.withValues(alpha: 0.12) : AppTheme.surfaceAlt,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: _category == name ? AppTheme.primary : Colors.transparent),
+                            ),
+                            child: Text(name, style: TextStyle(color: _category == name ? AppTheme.primary : null)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                );
+              }),
 
               DropdownButtonFormField<String>(
                 items: _currentCategories
