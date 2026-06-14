@@ -7,10 +7,9 @@ import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 import 'package:axisflow/ui/widgets/tiles/settings_tile.dart';
 import 'package:axisflow/ui/widgets/cards/glass_card.dart';
-
-void main() {
-  runApp(AxisFlowApp());
-}
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:axisflow/data/local/settings_db.dart';
 
 class AxisFlowApp extends StatelessWidget {
   final TransactionController controller = TransactionController()..load();
@@ -208,34 +207,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 // ── Profile Header ─────────────────────────────────────────────────────────────
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends StatefulWidget {
+
+  @override
+  State<_ProfileHeader> createState() => _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends State<_ProfileHeader> {
+  String? _avatarPath;
+
+  @override
+  void initState() {
+    super.initState();
+    // Read stored avatar (if any)
+    _avatarPath = SettingsDB.get<String>('avatar');
+  }
+
+  Future<void> _pickAndSaveAvatar() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.image,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final path = result.files.first.path;
+      if (path == null) return;
+
+      await SettingsDB.set<String>('avatar', path);
+      debugPrint('Avatar path: $path');
+debugPrint('Exists: ${File(path).existsSync()}');
+
+      setState(() {
+        _avatarPath = path;
+      });
+
+    } catch (e) {
+      // Handle errors (e.g. permission denied, unsupported format) gracefully
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update avatar: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    ImageProvider avatarImage;
+    if (_avatarPath != null && _avatarPath!.isNotEmpty) {
+      if (_avatarPath!.startsWith('http')) {
+        avatarImage = NetworkImage(_avatarPath!);
+      } else {
+        avatarImage = FileImage(File(_avatarPath!));
+      }
+    } else {
+      avatarImage = NetworkImage(AppCredentials.avatarUrl);
+    }
+
     return Column(
       children: [
         Stack(
           children: [
-            Container(
-              height: 96,
-              width: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  width: 2,
+            GestureDetector(
+              onTap: _pickAndSaveAvatar,
+              child: Container(
+                height: 96,
+                width: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    width: 2,
+                  ),
                 ),
-              ),
-              padding: const EdgeInsets.all(4),
-              child: ClipOval(
-                child: Image.network(
-                  AppCredentials.avatarUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    color: AppColors.surfaceContainer,
-                    child: const Icon(
-                      Icons.person,
-                      color: AppColors.onSurfaceVariant,
-                      size: 48,
+                padding: const EdgeInsets.all(4),
+                child: ClipOval(
+                  child: Image(
+                    image: avatarImage,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      color: AppColors.surfaceContainer,
+                      child: const Icon(
+                        Icons.person,
+                        color: AppColors.onSurfaceVariant,
+                        size: 48,
+                      ),
                     ),
                   ),
                 ),
@@ -244,18 +298,21 @@ class _ProfileHeader extends StatelessWidget {
             Positioned(
               bottom: 0,
               right: 0,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.background, width: 3),
-                ),
-                child: const Icon(
-                  Icons.edit,
-                  color: AppColors.onPrimary,
-                  size: 14,
+              child: GestureDetector(
+                onTap: _pickAndSaveAvatar,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.background, width: 3),
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    color: AppColors.onPrimary,
+                    size: 14,
+                  ),
                 ),
               ),
             ),

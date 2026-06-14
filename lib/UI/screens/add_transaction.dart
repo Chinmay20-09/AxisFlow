@@ -94,7 +94,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       final fav = SettingsDB.get<List>('categories.favorites', <String>[]);
       if (mounted) {
         setState(() {
-          _favoriteCats = (fav ?? <String>[]) .cast<String>();
+          _favoriteCats = (fav ?? <String>[]).cast<String>();
         });
       }
     } catch (_) {
@@ -258,35 +258,64 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               const SizedBox(height: 8),
 
               // Favorite categories quick-select
-              Builder(builder: (context) {
-                final favForType = _favoriteCats.where((f) => _currentCategories.contains(f)).toList();
-                if (favForType.isEmpty) return const SizedBox.shrink();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Favorites', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      children: favForType.map((name) {
-                        return GestureDetector(
-                          onTap: () => setState(() => _category = name),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 8, bottom: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                                                          color: _category == name ? AppTheme.primary.withValues(alpha: 0.12) : AppTheme.surfaceAlt,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: _category == name ? AppTheme.primary : Colors.transparent),
+              Builder(
+                builder: (context) {
+                  final favForType = _favoriteCats
+                      .where((f) => _currentCategories.contains(f))
+                      .toList();
+                  if (favForType.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Favorites',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        children: favForType.map((name) {
+                          return GestureDetector(
+                            onTap: () => setState(() => _category = name),
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                right: 8,
+                                bottom: 8,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _category == name
+                                    ? AppTheme.primary.withValues(alpha: 0.12)
+                                    : AppTheme.surfaceAlt,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _category == name
+                                      ? AppTheme.primary
+                                      : Colors.transparent,
+                                ),
+                              ),
+                              child: Text(
+                                name,
+                                style: TextStyle(
+                                  color: _category == name
+                                      ? AppTheme.primary
+                                      : null,
+                                ),
+                              ),
                             ),
-                            child: Text(name, style: TextStyle(color: _category == name ? AppTheme.primary : null)),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                );
-              }),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  );
+                },
+              ),
 
               DropdownButtonFormField<String>(
                 items: _currentCategories

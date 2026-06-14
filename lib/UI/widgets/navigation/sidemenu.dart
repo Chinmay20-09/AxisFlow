@@ -7,9 +7,12 @@ import 'package:axisflow/ui/screens/categories.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/ui/screens/profile.dart';
+import 'dart:io';
+import 'package:axisflow/data/local/settings_db.dart';
 import 'package:axisflow/ui/screens/dashboard.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/ui/screens/transaction.dart';
+
 // ─────────────────────────────────────────────
 //  DATA MODEL
 // ─────────────────────────────────────────────
@@ -260,6 +263,18 @@ class _AppDrawerState extends State<AppDrawer>
 class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final saved = SettingsDB.get<String>('avatar');
+    ImageProvider avatarImage;
+    if (saved != null && saved.isNotEmpty) {
+      if (saved.startsWith('http')) {
+        avatarImage = NetworkImage(saved);
+      } else {
+        avatarImage = FileImage(File(saved));
+      }
+    } else {
+      avatarImage = NetworkImage(AppCredentials.avatarUrl);
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
       child: Row(
@@ -273,10 +288,18 @@ class _ProfileHeader extends StatelessWidget {
               border: Border.all(color: AppColors.accent, width: 1.8),
               color: AppColors.card,
             ),
-            child: const ClipOval(
+            child: ClipOval(
               child: Image(
-                image: NetworkImage(AppCredentials.avatarUrl),
+                image: avatarImage,
                 fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  color: AppColors.surfaceContainer,
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.onSurfaceVariant,
+                    size: 24,
+                  ),
+                ),
               ),
             ),
           ),
@@ -314,7 +337,11 @@ class _ProfileHeader extends StatelessWidget {
               shape: BoxShape.circle,
               color: AppColors.accent,
               boxShadow: [
-                BoxShadow(color: AppColors.accent, blurRadius: 6, spreadRadius: 1),
+                BoxShadow(
+                  color: AppColors.accent,
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                ),
               ],
             ),
           ),
@@ -382,7 +409,7 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                       : Colors.transparent,
                   border: Border.all(
                     color: active
-                        ? AppColors.accent.withValues(alpha: 0.35)
+                        ? AppColors.accent.withValues(alpha: 0.90)
                         : Colors.transparent,
                     width: 1,
                   ),

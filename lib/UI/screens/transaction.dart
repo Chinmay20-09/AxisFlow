@@ -157,6 +157,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
   int _selectedChip = 0;
   final _searchController = TextEditingController();
   bool _searchFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild when search text changes so filters apply live
+    _searchController.addListener(() => setState(() {}));
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -277,10 +285,68 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 AnimatedBuilder(
                   animation: widget.controller,
                   builder: (context, _) {
-                    final txs = widget.controller.transactions;
-                    final groups = <String, List<Transaction>>{};
+                    // Apply search and chip filters to the transactions
+                    final allTxs = widget.controller.transactions;
                     final now = DateTime.now();
-                    for (final t in txs) {
+
+                    // Start with all transactions and progressively filter
+                    List<Transaction> filtered = List.from(allTxs);
+
+                    // Chip filters
+                    switch (_selectedChip) {
+                      case 1: // Income
+                        filtered = filtered
+                            .where((t) => t.type == TransactionType.income)
+                            .toList();
+                        break;
+                      case 2: // Expenses
+                        filtered = filtered
+                            .where((t) => t.type == TransactionType.expense)
+                            .toList();
+                        break;
+                      case 3: // Today
+                        filtered = filtered.where((t) {
+                          return t.createdAt.year == now.year &&
+                              t.createdAt.month == now.month &&
+                              t.createdAt.day == now.day;
+                        }).toList();
+                        break;
+                      case 4: // Yesterday
+                        final yesterday = DateTime(now.year, now.month, now.day)
+                            .subtract(const Duration(days: 1));
+                        filtered = filtered.where((t) {
+                          return t.createdAt.year == yesterday.year &&
+                              t.createdAt.month == yesterday.month &&
+                              t.createdAt.day == yesterday.day;
+                        }).toList();
+                        break;
+                      case 5: // This week (last 7 days)
+                        final weekAgo = now.subtract(const Duration(days: 7));
+                        filtered = filtered
+                            .where((t) => t.createdAt.isAfter(weekAgo))
+                            .toList();
+                        break;
+                      default:
+                        // 0 => All
+                        break;
+                    }
+
+                    // Search query
+                    final query = _searchController.text.trim().toLowerCase();
+                    if (query.isNotEmpty) {
+                      filtered = filtered.where((t) {
+                        final note = t.note.toLowerCase();
+                        final cat = t.category.toLowerCase();
+                        final amt = t.amount.toString();
+                        return note.contains(query) ||
+                            cat.contains(query) ||
+                            amt.contains(query);
+                      }).toList();
+                    }
+
+                    // Group filtered transactions by label (Today / Yesterday / Date)
+                    final groups = <String, List<Transaction>>{};
+                    for (final t in filtered) {
                       String label;
                       if (now.year == t.createdAt.year &&
                           now.month == t.createdAt.month &&
@@ -416,7 +482,7 @@ class _SearchAndFilters extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: AppStrings.searchHint,
                 hintStyle: TextStyle(
-                  color: AppColors.secondary.withValues(alpha: AppOpacity.low),
+                  color: AppColors.label.withValues(alpha: AppOpacity.low),
                   fontSize: 14,
                 ),
                 filled: true,
@@ -475,7 +541,9 @@ class _SearchAndFilters extends StatelessWidget {
                       style: AppTextStyles.chipLabel.copyWith(
                         color: active
                             ? AppColors.onPrimary
-                            : AppColors.secondary,
+                            : AppColors.label.withValues(
+                                alpha: AppOpacity.medium,
+                              ),
                       ),
                     ),
                   ),
@@ -513,7 +581,7 @@ class _TransactionGroup extends StatelessWidget {
           child: Text(
             label.toUpperCase(),
             style: AppTextStyles.groupLabel.copyWith(
-              color: AppColors.secondary.withValues(alpha: AppOpacity.medium),
+              color: AppColors.label.withValues(alpha: AppOpacity.medium),
             ),
           ),
         ),

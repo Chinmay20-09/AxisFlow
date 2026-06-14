@@ -3,6 +3,7 @@ import 'package:axisflow/data/local/settings_db.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
+
 // Category model
 class CategoryItem {
   final String name;
@@ -13,6 +14,7 @@ class CategoryItem {
   @override
   String toString() => name;
 }
+
 class CategoriesScreen extends StatefulWidget {
   final TransactionController? controller;
 
@@ -104,15 +106,20 @@ Future<Set<String>> loadFavoriteCategoryNames() async {
   }
 }
 
-Future<void> saveCategories({List<String>? income, List<String>? expense, Set<String>? favorites}) async {
+Future<void> saveCategories({
+  List<String>? income,
+  List<String>? expense,
+  Set<String>? favorites,
+}) async {
   await SettingsDB.init();
   if (income != null) await SettingsDB.set('categories.income', income);
   if (expense != null) await SettingsDB.set('categories.expense', expense);
-  if (favorites != null) await SettingsDB.set('categories.favorites', favorites.toList());
+  if (favorites != null) {
+    await SettingsDB.set('categories.favorites', favorites.toList());
+  }
 }
 
 // Screen widget to manage categories
-
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   List<String> _income = [];
@@ -147,7 +154,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         _expense.add(name.trim());
       }
     });
-    await saveCategories(income: _income, expense: _expense, favorites: _favorites);
+    await saveCategories(
+      income: _income,
+      expense: _expense,
+      favorites: _favorites,
+    );
   }
 
   Future<void> _removeCategory(bool income, String name) async {
@@ -159,7 +170,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       }
       _favorites.remove(name);
     });
-    await saveCategories(income: _income, expense: _expense, favorites: _favorites);
+    await saveCategories(
+      income: _income,
+      expense: _expense,
+      favorites: _favorites,
+    );
   }
 
   Future<void> _toggleFavorite(String name) async {
@@ -179,10 +194,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       context: context,
       builder: (c) => AlertDialog(
         title: Text(income ? 'Add income category' : 'Add expense category'),
-        content: TextField(controller: ctrl, decoration: const InputDecoration(hintText: 'Category name')),
+        content: TextField(
+          controller: ctrl,
+          decoration: const InputDecoration(hintText: 'Category name'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(c).pop(null), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(c).pop(ctrl.text.trim()), child: const Text('Add')),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(null),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(ctrl.text.trim()),
+            child: const Text('Add'),
+          ),
         ],
       ),
     );
@@ -193,43 +217,63 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     return Scaffold(
-        drawer: AppDrawer(
-          controller: widget.controller!,
-    selectedIndex: 3, // Categories
-  ),
-  appBar: AppBar(
-    title: const Text('Categories'),
-  ),
+      drawer: AppDrawer(
+        controller: widget.controller!,
+        selectedIndex: 3, // Categories
+      ),
+      appBar: AppBar(title: const Text('Categories')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Income', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              const Text(
+                'Income',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _income.map((name) => _categoryChip(name, true)).toList(),
+                children: _income
+                    .map((name) => _categoryChip(name, true))
+                    .toList(),
               ),
               const SizedBox(height: 8),
-              Row(children: [
-                ElevatedButton.icon(onPressed: () => _showAddDialog(true), icon: const Icon(Icons.add), label: const Text('Add')),
-              ]),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddDialog(true),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add'),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
 
-              const Text('Expense', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              const Text(
+                'Expense',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _expense.map((name) => _categoryChip(name, false)).toList(),
+                children: _expense
+                    .map((name) => _categoryChip(name, false))
+                    .toList(),
               ),
               const SizedBox(height: 8),
-              Row(children: [
-                ElevatedButton.icon(onPressed: () => _showAddDialog(false), icon: const Icon(Icons.add), label: const Text('Add')),
-              ]),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddDialog(false),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add'),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -242,24 +286,37 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: fav ? AppColors.primary.withValues(alpha: 0.12) : AppColors.surfaceContainer,
+        color: fav
+            ? AppColors.primary.withValues(alpha: 0.12)
+            : AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
         border: fav ? Border.all(color: AppColors.primary) : null,
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(
-  getCategoryDisplay(name),
-  style: TextStyle(
-    color: fav
-        ? AppColors.primary
-        : AppColors.onSurface,
-  ),
-),
-        const SizedBox(width: 8),
-        GestureDetector(onTap: () => _toggleFavorite(name), child: Icon(fav ? Icons.star : Icons.star_border, size: 18, color: fav ? AppColors.primary : AppColors.onSurfaceVariant)),
-        const SizedBox(width: 6),
-        GestureDetector(onTap: () => _removeCategory(income, name), child: const Icon(Icons.delete_outline, size: 18)),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            getCategoryDisplay(name),
+            style: TextStyle(
+              color: fav ? AppColors.primary : AppColors.onSurface,
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => _toggleFavorite(name),
+            child: Icon(
+              fav ? Icons.star : Icons.star_border,
+              size: 18,
+              color: fav ? AppColors.primary : AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () => _removeCategory(income, name),
+            child: const Icon(Icons.delete_outline, size: 18),
+          ),
+        ],
+      ),
     );
   }
 }

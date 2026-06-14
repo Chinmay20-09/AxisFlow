@@ -6,6 +6,7 @@ class AppTheme {
   // =========================
   // CORE COLORS
   // =========================
+  static const Color accent = Color(0xFFFFFFFF);
 
   static const Color bg = Color(0xFF0F0F14);
 

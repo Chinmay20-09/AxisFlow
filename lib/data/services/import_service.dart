@@ -265,10 +265,10 @@ class ImportService {
 
       if (largest == null || t.amount > largest.amount) largest = t;
 
-      if (minDate == null || t.createdAt.isBefore(minDate)){
+      if (minDate == null || t.createdAt.isBefore(minDate)) {
         minDate = t.createdAt;
       }
-      if (maxDate == null || t.createdAt.isAfter(maxDate)){
+      if (maxDate == null || t.createdAt.isAfter(maxDate)) {
         maxDate = t.createdAt;
       }
     }

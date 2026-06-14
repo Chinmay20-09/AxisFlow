@@ -55,7 +55,10 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                     scaffoldKey: _scaffoldKey,
                   ),
                   const SizedBox(height: AppSpacing.xxxl),
-                  const Text('Insights', style: AppTextStyles.pageTitle),
+                  const Text(
+                    'Extraordinary For You',
+                    style: AppTextStyles.pageTitle,
+                  ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     'Zoomed out view of life',

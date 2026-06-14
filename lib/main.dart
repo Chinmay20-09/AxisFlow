@@ -2,9 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'data/local/transaction_db.dart';
+import 'data/local/settings_db.dart';
 import 'controller/transaction_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'ui/screens/home_screen.dart';
+import 'ui/screens/onboarding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +26,9 @@ void main() async {
   // Init Hive
   await TransactionDB.init();
 
+  // Init Settings DB (stores preferences like avatar path)
+  await SettingsDB.init();
+
   // Init controller
   final controller = TransactionController()..load();
 
@@ -36,11 +41,20 @@ class AxisFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onboardingComplete = SettingsDB.get<bool>('app.onboardingComplete', false) ?? false;
+
     return MaterialApp(
       title: 'AxisFlow',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      home: HomeScreen(controller: controller),
+      theme: AppTheme.theme.copyWith(
+        colorScheme: AppTheme.theme.colorScheme.copyWith(
+          primary: AppTheme.primary,
+          secondary: AppTheme.accent
+        ),
+      ),
+      home: onboardingComplete
+          ? HomeScreen(controller: controller)
+          : OnboardingScreen(controller: controller),
     );
   }
 }

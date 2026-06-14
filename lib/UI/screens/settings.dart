@@ -233,7 +233,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── Privacy ──────────────────────────────────────────────────
                 _PrivacyCard(controller: widget.controller),
-
               ]),
             ),
           ),
@@ -682,7 +681,6 @@ class _AiCard extends StatelessWidget {
     );
   }
 }
-
 
 // ── Privacy Card ───────────────────────────────────────────────────────────────
 class _PrivacyCard extends StatelessWidget {

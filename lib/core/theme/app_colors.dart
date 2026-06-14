@@ -1,24 +1,39 @@
 import 'package:flutter/material.dart';
 
 abstract class AppColors {
+  // Semantic color roles (new)
   static const Color background = Color(0xFF05070A);
   static const Color surface = Color(0xFF111417);
+  static const Color card = Color(0x1AFFFFFF);
+
+  // Text roles
+  static const Color textPrimary = Color(0xFFE1E2E7);
+  static const Color textSecondary = Color(0xFF8888AA);
+  static const Color textMuted = Color(0xFF8B8FA8);
+
+  // Financial / semantic accents
+  static const Color income = Color(
+    0xFF6BFB9A,
+  ); // maps to accentGreen / primary
+  static const Color expense = Color(0xFFFF6B6B); // maps to accentRed
+
+  // Feedback roles
+  static const Color success = Color(0xFF6BFB9A);
+  static const Color warning = Color(0xFFFBBF24);
+  static const Color error = Color(0xFFFFB4AB);
+
+  // --- Legacy / palette entries (kept for compatibility) ---
   static const Color surfaceBackground = Color(0xFF0F0F14);
   static const Color surfaceContainerHigh = Color(0xFF22222F);
   static const Color surfaceContainerHighest = Color(0xFF22222F);
-  static const Color card = Color(0x1AFFFFFF);
   static const Color primary = Color(0xFF6BFB9A);
   static const Color secondary = Color.fromARGB(255, 251, 14, 14);
-  static const Color textPrimary = Color(0xFFE1E2E7);
   static const Color onSurface = Color(0xFFF1F1F5);
   static const Color onSurfaceVariant = Color(0xFF8888AA);
-  static const Color textSecondary = Color(0xFF8888AA);
   static const Color accent = Color(0xFFFFFFFF);
   static const Color amber = Color(0xFFFBBF24);
-  static const Color error = Color(0xFFFFB4AB);
   static const Color secondaryContainer = Color(0xFF464950);
   static const Color surfaceContainer = Color(0xFF1D2023);
-
   static const Color accentGreen = Color(0xFF6BFB9A);
   static const Color accentBlue = Color(0xFF7DD3FC);
   static const Color accentPurple = Color(0xFFB794F4);

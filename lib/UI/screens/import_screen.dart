@@ -65,7 +65,7 @@ class _ImportScreenState extends State<ImportScreen> {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      if (mounted){
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Import failed: $e')));

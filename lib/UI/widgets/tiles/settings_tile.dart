@@ -56,7 +56,6 @@ class SettingsTile extends StatelessWidget {
                   ],
                 ),
               ),
-              trailing!,
             ],
           ),
         ),
