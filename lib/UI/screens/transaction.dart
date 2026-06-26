@@ -161,8 +161,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   void initState() {
     super.initState();
-    // Rebuild when search text changes so filters apply live
-    _searchController.addListener(() => setState(() {}));
+    // Forward search text to controller so filtering is centralized
+    _searchController.addListener(() {
+      widget.controller.setSearchQuery(_searchController.text);
+    });
   }
 
   @override
@@ -279,70 +281,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   focused: _searchFocused,
                   onFocusChange: (v) => setState(() => _searchFocused = v),
                   selectedChip: _selectedChip,
-                  onChipSelected: (i) => setState(() => _selectedChip = i),
+                  onChipSelected: (i) => setState(() {
+                    _selectedChip = i;
+                    widget.controller.setChipSelected(i);
+                  }),
                 ),
                 const SizedBox(height: AppDims.sectionGap),
                 AnimatedBuilder(
                   animation: widget.controller,
                   builder: (context, _) {
-                    // Apply search and chip filters to the transactions
-                    final allTxs = widget.controller.transactions;
+                    // Use controller's filteredTransactions which centralizes
+                    // search and filter logic.
+                    final filtered = widget.controller.filteredTransactions;
                     final now = DateTime.now();
-
-                    // Start with all transactions and progressively filter
-                    List<Transaction> filtered = List.from(allTxs);
-
-                    // Chip filters
-                    switch (_selectedChip) {
-                      case 1: // Income
-                        filtered = filtered
-                            .where((t) => t.type == TransactionType.income)
-                            .toList();
-                        break;
-                      case 2: // Expenses
-                        filtered = filtered
-                            .where((t) => t.type == TransactionType.expense)
-                            .toList();
-                        break;
-                      case 3: // Today
-                        filtered = filtered.where((t) {
-                          return t.createdAt.year == now.year &&
-                              t.createdAt.month == now.month &&
-                              t.createdAt.day == now.day;
-                        }).toList();
-                        break;
-                      case 4: // Yesterday
-                        final yesterday = DateTime(now.year, now.month, now.day)
-                            .subtract(const Duration(days: 1));
-                        filtered = filtered.where((t) {
-                          return t.createdAt.year == yesterday.year &&
-                              t.createdAt.month == yesterday.month &&
-                              t.createdAt.day == yesterday.day;
-                        }).toList();
-                        break;
-                      case 5: // This week (last 7 days)
-                        final weekAgo = now.subtract(const Duration(days: 7));
-                        filtered = filtered
-                            .where((t) => t.createdAt.isAfter(weekAgo))
-                            .toList();
-                        break;
-                      default:
-                        // 0 => All
-                        break;
-                    }
-
-                    // Search query
-                    final query = _searchController.text.trim().toLowerCase();
-                    if (query.isNotEmpty) {
-                      filtered = filtered.where((t) {
-                        final note = t.note.toLowerCase();
-                        final cat = t.category.toLowerCase();
-                        final amt = t.amount.toString();
-                        return note.contains(query) ||
-                            cat.contains(query) ||
-                            amt.contains(query);
-                      }).toList();
-                    }
 
                     // Group filtered transactions by label (Today / Yesterday / Date)
                     final groups = <String, List<Transaction>>{};

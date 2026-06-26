@@ -46,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                 builder: (_) => AddTransactionSheet(controller: controller),
               );
             },
-            child: const Icon(Icons.add, color: AppColors.onSurface),
+            child: const Icon(Icons.add, color: AppColors.black),
           ),
           body: SafeArea(
             child: SingleChildScrollView(

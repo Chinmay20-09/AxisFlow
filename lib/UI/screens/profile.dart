@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/core/config/app_config.dart';
+import 'package:axisflow/data/services/auth_service.dart';
+import 'package:axisflow/data/local/settings_db.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
@@ -9,33 +11,8 @@ import 'package:axisflow/ui/widgets/tiles/settings_tile.dart';
 import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:axisflow/data/local/settings_db.dart';
+import 'package:axisflow/ui/screens/auth/auth_gate.dart';
 
-class AxisFlowApp extends StatelessWidget {
-  final TransactionController controller = TransactionController()..load();
-
-  AxisFlowApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AxisFlow | Profile',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          surface: AppColors.surface,
-        ),
-      ),
-      home: ProfileScreen(controller: controller),
-    );
-  }
-}
-
-// Using shared AppColors from core/app_colors.dart
-
-// ── Screen ─────────────────────────────────────────────────────────────────────
 class ProfileScreen extends StatefulWidget {
   final TransactionController controller;
   const ProfileScreen({super.key, required this.controller});
@@ -193,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 32),
 
                       // ── Logout ─────────────────────────────────────────────────
-                      _LogoutButton(),
+                      _LogoutButton(controller: widget.controller),
                     ],
                   ),
                 ),
@@ -208,44 +185,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 // ── Profile Header ─────────────────────────────────────────────────────────────
 class _ProfileHeader extends StatefulWidget {
-
   @override
   State<_ProfileHeader> createState() => _ProfileHeaderState();
 }
 
 class _ProfileHeaderState extends State<_ProfileHeader> {
   String? _avatarPath;
+  String? _userName;
+  String? _userEmail;
 
   @override
   void initState() {
     super.initState();
     // Read stored avatar (if any)
     _avatarPath = SettingsDB.get<String>('avatar');
+
+    // Load user info from AuthService if available
+    final user = AuthService.instance.currentUser;
+    _userName =
+        user?.userMetadata?['name'] as String? ?? user?.email?.split('@').first;
+    _userEmail = user?.email;
   }
 
   Future<void> _pickAndSaveAvatar() async {
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.image,
-      );
+      final result = await FilePicker.pickFiles(type: FileType.image);
       if (result == null || result.files.isEmpty) return;
       final path = result.files.first.path;
       if (path == null) return;
 
       await SettingsDB.set<String>('avatar', path);
       debugPrint('Avatar path: $path');
-debugPrint('Exists: ${File(path).existsSync()}');
+      debugPrint('Exists: ${File(path).existsSync()}');
 
       setState(() {
         _avatarPath = path;
       });
-
     } catch (e) {
       // Handle errors (e.g. permission denied, unsupported format) gracefully
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update avatar: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update avatar: $e')));
     }
   }
 
@@ -320,7 +299,7 @@ debugPrint('Exists: ${File(path).existsSync()}');
         ),
         const SizedBox(height: 16),
         Text(
-          AppCredentials.userName,
+          _userName ?? AppCredentials.userName,
           style: const TextStyle(
             color: AppColors.onSurface,
             fontSize: 32,
@@ -337,9 +316,9 @@ debugPrint('Exists: ${File(path).existsSync()}');
             border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           ),
           child: Text(
-            AppCredentials.userPlan,
+            _userEmail ?? AppCredentials.userEmail,
             style: const TextStyle(
-              color: AppColors.primary,
+              color: AppColors.onSurface,
               fontSize: 11,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.1 * 11,
@@ -463,6 +442,9 @@ class _SettingsSection extends StatelessWidget {
 
 // ── Logout Button ──────────────────────────────────────────────────────────────
 class _LogoutButton extends StatefulWidget {
+  final TransactionController controller;
+  const _LogoutButton({required this.controller});
+
   @override
   State<_LogoutButton> createState() => _LogoutButtonState();
 }
@@ -477,7 +459,30 @@ class _LogoutButtonState extends State<_LogoutButton> {
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(
-          onTap: () {},
+          onTap: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final navigator = Navigator.of(context);
+            debugPrint('Logout pressed');
+final res = await AuthService.instance.signOut();
+debugPrint('Logout result: $res');
+            if (!mounted) return;
+
+            if (res != null) {
+              messenger.showSnackBar(SnackBar(content: Text(res)));
+              return;
+            }
+
+            // Show success then navigate via AuthGate so app-level routing applies
+            messenger.showSnackBar(const SnackBar(content: Text('Signed out successfully')));
+            await Future.delayed(const Duration(milliseconds: 300));
+
+            navigator.pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => AuthGate(controller: widget.controller),
+              ),
+              (route) => false,
+            );
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
             child: Row(

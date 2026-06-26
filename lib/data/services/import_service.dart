@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-
+import 'package:csv/csv.dart';
 import '../local/transaction_db.dart';
 import '../models/transaction_model.dart';
 
@@ -33,6 +33,12 @@ class ImportService {
   /// Parse CSV content and return preview (does not write to DB).
   static Future<ImportResult> previewCsv(String content) async {
     final rows = const CsvToListConverter().convert(content);
+    debugPrint('ROWS LENGTH = ${rows.length}');
+    debugPrint('FIRST ROW = ${rows.first}');
+
+    for (int i = 0; i < rows.length && i < 5; i++) {
+      debugPrint('ROW[$i] = ${rows[i]}');
+    }
     if (rows.isEmpty) {
       return ImportResult(
         totalRows: 0,
@@ -63,6 +69,8 @@ class ImportService {
 
     for (int i = start; i < rows.length; i++) {
       final row = rows[i];
+      debugPrint('PROCESSING ROW $i => $row');
+      debugPrint('INVALID COLUMN => $row');
       try {
         if (row.length < 7) {
           invalidRecords.add({
@@ -80,7 +88,7 @@ class ImportService {
         final category = row[4].toString();
         final typeStr = row[5].toString().toLowerCase();
         final stateStr = row[6].toString().toLowerCase();
-
+        debugPrint('INVALID CATEGORY => $row');
         if (category.trim().isEmpty) {
           invalidRecords.add({
             'row': i + 1,
@@ -91,6 +99,7 @@ class ImportService {
         }
 
         final amount = double.tryParse(amountStr.replaceAll(',', ''));
+        debugPrint('INVALID AMOUNT => $row');
         if (amount == null) {
           invalidRecords.add({
             'row': i + 1,
@@ -101,6 +110,7 @@ class ImportService {
         }
 
         DateTime createdAt;
+        debugPrint('INVALID DATE/TIME => $row');
         try {
           createdAt = _dateTimeFormat.parseStrict('$dateStr $timeStr');
         } catch (e) {
@@ -113,6 +123,7 @@ class ImportService {
         }
 
         TransactionType type;
+        debugPrint('INVALID TYPE => $row');
         if (typeStr == 'income') {
           type = TransactionType.income;
         } else if (typeStr == 'expense') {
@@ -127,6 +138,7 @@ class ImportService {
         }
 
         TransactionState state;
+        debugPrint('INVALID STATE => $row');
         if (stateStr == 'completed') {
           state = TransactionState.completed;
         } else if (stateStr == 'pending') {
@@ -289,19 +301,5 @@ class ImportService {
       'dateRangeStart': minDate,
       'dateRangeEnd': maxDate,
     };
-  }
-}
-
-class CsvToListConverter {
-  final String eol;
-
-  const CsvToListConverter({this.eol = '\n'});
-
-  List<List<dynamic>> convert(String csv) {
-    final rows = csv.split(eol);
-    return rows.map((row) {
-      // Simple split by comma, can be enhanced to handle quoted commas
-      return row.split(',');
-    }).toList();
   }
 }

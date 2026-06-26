@@ -7,6 +7,13 @@ import '../data/models/transaction_model.dart';
 class TransactionController extends ChangeNotifier {
   List<Transaction> _transactions = [];
 
+  // Filter / search state
+  String _searchQuery = '';
+  TransactionType? _typeFilter;
+  TransactionState? _stateFilter;
+  DateTime? _fromDate;
+  DateTime? _toDate;
+
   List<Transaction> get transactions => _transactions;
 
   void load() {
@@ -21,7 +28,6 @@ class TransactionController extends ChangeNotifier {
 
   Future<bool> update(Transaction t) async {
     if (!t.isEditable) return false;
-    t.amount = t.amount;
     await TransactionDB.update(t);
     load();
     return true;
@@ -32,6 +38,116 @@ class TransactionController extends ChangeNotifier {
     await TransactionDB.delete(id);
     load();
     return true;
+  }
+
+  // --- Filtering API ---
+  void setSearchQuery(String q) {
+    _searchQuery = q.trim().toLowerCase();
+    notifyListeners();
+  }
+
+  void setTypeFilter(TransactionType? type) {
+    _typeFilter = type;
+    notifyListeners();
+  }
+
+  void setStateFilter(TransactionState? state) {
+    _stateFilter = state;
+    notifyListeners();
+  }
+
+  void setDateRange(DateTime? from, DateTime? to) {
+    _fromDate = from;
+    _toDate = to;
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    _searchQuery = '';
+    _typeFilter = null;
+    _stateFilter = null;
+    _fromDate = null;
+    _toDate = null;
+    notifyListeners();
+  }
+
+  // Helper: apply quick chip semantics (matches UI chips)
+  void setChipSelected(int i) {
+    // 0 All, 1 Income, 2 Expenses, 3 Today, 4 Yesterday, 5 This Week
+    final now = DateTime.now();
+    switch (i) {
+      case 1:
+        setTypeFilter(TransactionType.income);
+        setDateRange(null, null);
+        break;
+      case 2:
+        setTypeFilter(TransactionType.expense);
+        setDateRange(null, null);
+        break;
+      case 3: // Today
+        setTypeFilter(null);
+        setDateRange(
+          DateTime(now.year, now.month, now.day),
+          DateTime(now.year, now.month, now.day, 23, 59, 59),
+        );
+        break;
+      case 4: // Yesterday
+        final yesterday = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 1));
+        setTypeFilter(null);
+        setDateRange(
+          DateTime(yesterday.year, yesterday.month, yesterday.day),
+          DateTime(yesterday.year, yesterday.month, yesterday.day, 23, 59, 59),
+        );
+        break;
+      case 5: // This week (last 7 days)
+        setTypeFilter(null);
+        setDateRange(now.subtract(const Duration(days: 7)), now);
+        break;
+      default:
+        clearFilters();
+        break;
+    }
+  }
+
+  // Returns transactions after applying active filters and search
+  List<Transaction> get filteredTransactions {
+    var filtered = List<Transaction>.from(_transactions);
+
+    if (_typeFilter != null) {
+      filtered = filtered.where((t) => t.type == _typeFilter).toList();
+    }
+
+    if (_stateFilter != null) {
+      filtered = filtered.where((t) => t.state == _stateFilter).toList();
+    }
+
+    if (_fromDate != null) {
+      filtered = filtered
+          .where((t) => !t.createdAt.isBefore(_fromDate!))
+          .toList();
+    }
+    if (_toDate != null) {
+      filtered = filtered.where((t) => !t.createdAt.isAfter(_toDate!)).toList();
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((t) {
+        final note = t.note.toLowerCase();
+        final cat = t.category.toLowerCase();
+        final amt = t.amount.toString();
+        return note.contains(_searchQuery) ||
+            cat.contains(_searchQuery) ||
+            amt.contains(_searchQuery);
+      }).toList();
+    }
+
+    // Keep original ordering (newest first)
+    filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return filtered;
   }
 
   // Group by category

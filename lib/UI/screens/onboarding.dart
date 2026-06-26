@@ -22,12 +22,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardPageData(
       icon: Icons.auto_graph,
       title: 'Minimal Tracker',
-      body: 'Track transactions with minimal friction. Clean UI, clear insights.',
+      body:
+          'Track transactions with minimal friction. Clean UI, clear insights.',
     ),
     _OnboardPageData(
       icon: Icons.show_chart,
       title: 'Clean Analytics',
-      body: 'Weekly rhythms, spending trends and simple charts to keep you aware.',
+      body:
+          'Weekly rhythms, spending trends and simple charts to keep you aware.',
     ),
     _OnboardPageData(
       icon: Icons.shield,
@@ -60,7 +62,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await SettingsDB.set<bool>('app.onboardingComplete', true);
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeScreen(controller: widget.controller)),
+      MaterialPageRoute(
+        builder: (_) => HomeScreen(controller: widget.controller),
+      ),
     );
   }
 
@@ -83,126 +87,157 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 600;
-          final contentW = isWide ? 600.0 : double.infinity;
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 600;
+            final contentW = isWide ? 600.0 : double.infinity;
 
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: Column(
-                  children: [
-                    // Top bar with Skip
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: _skip,
-                            child: Text('Skip', style: TextStyle(color: AppColors.textSecondary)),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Expanded(
-                      child: Center(
-                        child: SizedBox(
-                          width: contentW,
-                          child: PageView.builder(
-                            controller: _pageCtrl,
-                            itemCount: _pages.length,
-                            itemBuilder: (context, i) {
-                              final p = _pages[i];
-                              return Padding(
-                                padding: const EdgeInsets.all(AppSpacing.lg),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Icon(p.icon, size: isWide ? 120 : 96, color: AppColors.primary),
-                                    const SizedBox(height: 24),
-                                    Text(
-                                      p.title,
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                            color: AppColors.textPrimary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    GlassCard(
-                                      padding: const EdgeInsets.all(AppSpacing.lg),
-                                      child: Text(
-                                        p.body,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                              color: AppColors.textSecondary,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: Column(
+                    children: [
+                      // Top bar with Skip
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
                         ),
-                      ),
-                    ),
-
-                    // Indicator + buttons
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.lg,
-                      ),
-                      child: SizedBox(
-                        width: contentW,
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            // Page indicator
-                            Row(
-                              children: List.generate(_pages.length, (i) {
-                                final active = i == _page;
-                                return AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  margin: const EdgeInsets.only(right: 8),
-                                  width: active ? 22 : 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: active ? AppColors.primary : AppColors.surfaceContainer,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                );
-                              }),
-                            ),
-
-                            // Next / Get Started
-                            ElevatedButton(
-                              onPressed: _next,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: AppColors.onPrimary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                elevation: 0,
+                            TextButton(
+                              onPressed: _skip,
+                              child: Text(
+                                'Skip',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                              child: Text(_page == _pages.length - 1 ? 'Get Started' : 'Next'),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+
+                      Expanded(
+                        child: Center(
+                          child: SizedBox(
+                            width: contentW,
+                            child: PageView.builder(
+                              controller: _pageCtrl,
+                              itemCount: _pages.length,
+                              itemBuilder: (context, i) {
+                                final p = _pages[i];
+                                return Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        p.icon,
+                                        size: isWide ? 120 : 96,
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Text(
+                                        p.title,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineLarge
+                                            ?.copyWith(
+                                              color: AppColors.textPrimary,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      GlassCard(
+                                        padding: const EdgeInsets.all(
+                                          AppSpacing.lg,
+                                        ),
+                                        child: Text(
+                                          p.body,
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Indicator + buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.lg,
+                        ),
+                        child: SizedBox(
+                          width: contentW,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Page indicator
+                              Row(
+                                children: List.generate(_pages.length, (i) {
+                                  final active = i == _page;
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    margin: const EdgeInsets.only(right: 8),
+                                    width: active ? 22 : 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: active
+                                          ? AppColors.primary
+                                          : AppColors.surfaceContainer,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                  );
+                                }),
+                              ),
+
+                              // Next / Get Started
+                              ElevatedButton(
+                                onPressed: _next,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: AppColors.onPrimary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  _page == _pages.length - 1
+                                      ? 'Get Started'
+                                      : 'Next',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        }),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -213,5 +248,9 @@ class _OnboardPageData {
   final String title;
   final String body;
 
-  _OnboardPageData({required this.icon, required this.title, required this.body});
+  _OnboardPageData({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
 }

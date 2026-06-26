@@ -3,44 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/ui/widgets/navigation/sidemenu.dart';
 import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
-import 'package:axisflow/data/local/settings_db.dart';
+import 'package:axisflow/data/services/settings_service.dart';
 import 'package:axisflow/data/services/export_service.dart';
 import 'package:axisflow/ui/screens/import_screen.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
-
-void main() {
-  runApp(AxisFlowApp());
-}
-
-class AxisFlowApp extends StatelessWidget {
-  final TransactionController controller = TransactionController()..load();
-
-  AxisFlowApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AxisFlow | Settings',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          surface: AppColors.surface,
-        ),
-        sliderTheme: SliderThemeData(
-          trackHeight: 4,
-          activeTrackColor: AppColors.primary,
-          inactiveTrackColor: AppColors.surfaceContainer,
-          thumbColor: AppColors.primary,
-          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-          overlayColor: AppColors.primary.withValues(alpha: 0.12),
-        ),
-      ),
-      home: SettingsScreen(controller: controller),
-    );
-  }
-}
 
 // Using shared AppColors from core/theme/appAppColorsolors.dart
 
@@ -75,27 +41,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    try {
-      await SettingsDB.init();
-      final dark = SettingsDB.get<bool>('appearance.darkMode', _darkMode);
-      final accent = SettingsDB.get<int>(
-        'appearance.accentIndex',
-        _accentIndex,
-      );
-      final currency = SettingsDB.get<String>('finance.currency', _currency);
-      final firstDay = SettingsDB.get<String>('finance.firstDay', _firstDay);
-      final freq = SettingsDB.get<double>('ai.insightFreq', _insightFreq);
+    // Ensure SettingsService is initialized (main usually does this). Safe to call.
+    await SettingsService.instance.init();
 
+    // Populate local state from service
+    final svc = SettingsService.instance;
+    setState(() {
+      _darkMode = svc.darkMode;
+      _accentIndex = svc.accentIndex;
+      _currency = svc.currency;
+      _firstDay = svc.firstDay;
+    });
+
+    // Listen for future changes so UI updates immediately
+    svc.addListener(() {
+      if (!mounted) return;
       setState(() {
-        _darkMode = dark ?? _darkMode;
-        _accentIndex = accent ?? _accentIndex;
-        _currency = currency ?? _currency;
-        _firstDay = firstDay ?? _firstDay;
-        _insightFreq = freq ?? _insightFreq;
+        _darkMode = svc.darkMode;
+        _accentIndex = svc.accentIndex;
+        _currency = svc.currency;
+        _firstDay = svc.firstDay;
       });
-    } catch (e) {
-      // If persistence not available, fall back to defaults
-    }
+    });
   }
 
   static const _freqLabels = ['Daily', 'Weekly', 'Adaptive'];
@@ -206,9 +173,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     AppColors.accentPurple,
                     AppColors.accentAmber,
                   ],
-                  onDarkModeToggle: () =>
-                      setState(() => _darkMode = !_darkMode),
-                  onAccentSelected: (i) => setState(() => _accentIndex = i),
+                  onDarkModeToggle: () => SettingsService.instance.setDarkMode(
+                    !SettingsService.instance.darkMode,
+                  ),
+                  onAccentSelected: (i) =>
+                      SettingsService.instance.setAccentIndex(i),
                 ),
                 const SizedBox(height: 16),
 
@@ -216,10 +185,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _FinanceCard(
                   currency: _currency,
                   firstDay: _firstDay,
-                  onCurrencyChanged: (v) =>
-                      setState(() => _currency = v ?? _currency),
-                  onFirstDayChanged: (v) =>
-                      setState(() => _firstDay = v ?? _firstDay),
+                  onCurrencyChanged: (v) {
+                    if (v != null) SettingsService.instance.setCurrency(v);
+                  },
+                  onFirstDayChanged: (v) {
+                    if (v != null) SettingsService.instance.setFirstDay(v);
+                  },
                 ),
                 const SizedBox(height: 16),
 
