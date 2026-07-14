@@ -4,13 +4,12 @@ import 'package:flutter/services.dart';
 import 'data/local/transaction_db.dart';
 import 'data/local/settings_db.dart';
 import 'data/services/settings_service.dart';
-//import 'data/services/auth_service.dart';
+import 'data/services/auth_service.dart';
 import 'controller/transaction_controller.dart';
 import 'core/theme/app_theme.dart';
-//import 'core/config/supabase_config.dart';
-//import 'ui/screens/auth/auth_gate.dart';
-import 'ui/screens/home_screen.dart';
-//import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/config/supabase_config.dart';
+import 'ui/screens/auth/auth_gate.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,16 +33,16 @@ void main() async {
   await SettingsDB.init();
 
   // Initialize Supabase (requires filling lib/core/supabase_config.dart)
-//  await Supabase.initialize(
-//    url: supabaseUrl,
-//    publishableKey: supabasePublishableKey,
-//  );
+  await Supabase.initialize(
+    url: supabaseUrl,
+   publishableKey: supabasePublishableKey,
+  );
 
   // Init SettingsService (loads persisted prefs)
   await SettingsService.instance.init();
 
   // Init AuthService (reads any persisted session)
-//  await AuthService.instance.init();
+  await AuthService.instance.init();
 
   // Init controller
   final controller = TransactionController()..load();
@@ -66,7 +65,7 @@ class AxisFlowApp extends StatelessWidget {
           title: 'AxisFlow',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.theme(SettingsService.instance.accentColor),
-          home: HomeScreen(controller: controller),
+          home: AuthGate(controller: controller),
         );
       },
     );

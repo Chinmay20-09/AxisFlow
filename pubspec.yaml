@@ -1,6 +1,6 @@
 name: axisflow
 description: "A minimilistic transaction tracking app built with Flutter. It allows users to easily track their expenses and income, providing a simple and intuitive interface for managing their finances."
-version: 1.0.2
+version: 0.9.0
 
 environment:
   sdk: ^3.11.4

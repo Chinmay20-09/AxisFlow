@@ -12,11 +12,16 @@ import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:axisflow/ui/screens/auth/auth_gate.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
 
 class ProfileScreen extends StatefulWidget {
   final TransactionController controller;
   const ProfileScreen({super.key, required this.controller});
-
+    
+  
+   
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }

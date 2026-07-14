@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:axisflow/ui/screens/alert.dart';
 import 'package:axisflow/ui/screens/budgets.dart';
 import 'package:axisflow/ui/screens/home_screen.dart';
 import 'package:axisflow/ui/screens/settings.dart';
@@ -8,10 +7,12 @@ import 'package:axisflow/controller/transaction_controller.dart';
 import 'package:axisflow/core/config/app_config.dart';
 import 'package:axisflow/ui/screens/profile.dart';
 import 'dart:io';
+import 'package:axisflow/data/services/auth_service.dart';
 import 'package:axisflow/data/local/settings_db.dart';
 import 'package:axisflow/ui/screens/dashboard.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/ui/screens/transaction.dart';
+import 'package:axisflow/ui/screens/auth/auth_gate.dart';
 
 // ─────────────────────────────────────────────
 //  DATA MODEL
@@ -94,12 +95,12 @@ class _AppDrawerState extends State<AppDrawer>
         screen: ProfileScreen(controller: widget.controller),
       ),
 
-      _NavItem(
-        Icons.notifications_rounded,
-        'Alerts',
-        badge: '3',
-        screen: AlertsScreen(controller: widget.controller),
-      ),
+//      _NavItem(
+  //      Icons.notifications_rounded,
+    //    'Alerts',
+      //  badge: '3',
+        //screen: AlertsScreen(controller: widget.controller),
+      //),
 
       _NavItem(
         Icons.settings_rounded,
@@ -248,8 +249,7 @@ class _AppDrawerState extends State<AppDrawer>
             const Spacer(),
 
             // ── LOGOUT ──────────────────────────────
-            _LogoutButton(),
-            const SizedBox(height: 12),
+            _LogoutButton(controller: widget.controller)
           ],
         ),
       ),
@@ -501,6 +501,9 @@ class _SectionDivider extends StatelessWidget {
 //  LOGOUT BUTTON
 // ─────────────────────────────────────────────
 class _LogoutButton extends StatefulWidget {
+  final TransactionController controller;
+  const _LogoutButton({required this.controller});
+
   @override
   State<_LogoutButton> createState() => _LogoutButtonState();
 }
@@ -509,6 +512,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
   bool _hovered = false;
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -516,7 +520,30 @@ class _LogoutButtonState extends State<_LogoutButton> {
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(
-          onTap: () {},
+          onTap: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final navigator = Navigator.of(context);
+            debugPrint('Logout pressed');
+final res = await AuthService.instance.signOut();
+debugPrint('Logout result: $res');
+            if (!mounted) return;
+
+            if (res != null) {
+              messenger.showSnackBar(SnackBar(content: Text(res)));
+              return;
+            }
+
+            // Show success then navigate via AuthGate so app-level routing applies
+            messenger.showSnackBar(const SnackBar(content: Text('Signed out successfully')));
+            await Future.delayed(const Duration(milliseconds: 300));
+
+            navigator.pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => AuthGate(controller: widget.controller),
+              ),
+              (route) => false,
+            );
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
