@@ -37,7 +37,7 @@ class HomeScreen extends StatelessWidget {
           drawer: AppDrawer(controller: controller, selectedIndex: 0),
           backgroundColor: AppColors.surfaceBackground,
           floatingActionButton: FloatingActionButton(
-            backgroundColor: AppColors.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -102,8 +102,8 @@ class _GreetingSection extends StatelessWidget {
             Container(
               width: AppSpacing.xs,
               height: AppSpacing.xs,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              decoration:  BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
                 shape: BoxShape.circle,
               ),
             ),
@@ -146,7 +146,7 @@ class _TodayFlow extends StatelessWidget {
           Text(
             amountString,
             style: AppTextStyles.sectionTitle.copyWith(
-              color: amount >= 0 ? AppColors.primary : AppColors.secondary,
+              color: amount >= 0 ? Theme.of(context).colorScheme.primary : AppColors.secondary,
               fontSize: 42,
               fontWeight: FontWeight.bold,
             ),

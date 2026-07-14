@@ -30,7 +30,7 @@ class AppTheme {
 
   static const Color pending = Color(0xFFFBBF24);
 
-  static const Color primary = income;
+  static Color primary = income;
 
   // =========================
   // TEXT COLORS
@@ -87,7 +87,7 @@ class AppTheme {
   // THEME
   // =========================
 
-  static ThemeData get theme => ThemeData(
+  static ThemeData theme(Color primary) => ThemeData(
     brightness: Brightness.dark,
 
     scaffoldBackgroundColor: bg,
@@ -96,7 +96,7 @@ class AppTheme {
 
     splashFactory: NoSplash.splashFactory,
 
-    colorScheme: const ColorScheme.dark(
+    colorScheme:  ColorScheme.dark(
       primary: primary,
       surface: surface,
       error: expense,
@@ -114,7 +114,7 @@ class AppTheme {
       iconTheme: IconThemeData(color: textSecondary),
     ),
 
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primary,
       foregroundColor: bg,
     ),
@@ -168,7 +168,7 @@ class AppTheme {
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusSmall),
-        borderSide: const BorderSide(color: primary, width: 1.5),
+        borderSide:  BorderSide(color: primary, width: 1.5),
       ),
 
       labelStyle: const TextStyle(color: textSecondary),

@@ -28,7 +28,7 @@ class ExportImportTile extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              Icon(icon, color: AppColors.primary),
+              Icon(icon, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Text(

@@ -281,14 +281,14 @@ class _CategoryCardState extends State<_CategoryCard>
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: widget.selected
-                  ? AppColors.primary
+                  ? Theme.of(context).colorScheme.primary
                   : Colors.white.withValues(alpha: 0.08),
               width: widget.selected ? 1.5 : 1,
             ),
             boxShadow: widget.selected
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                       blurRadius: 20,
                       spreadRadius: 0,
                     ),
@@ -321,7 +321,7 @@ class _CategoryCardState extends State<_CategoryCard>
                         widget.item.icon,
                         size: 30,
                         color: widget.selected
-                            ? AppColors.primary
+                            ? Theme.of(context).colorScheme.primary
                             : AppColors.onSurface,
                       ),
                     ),
@@ -344,7 +344,7 @@ class _CategoryCardState extends State<_CategoryCard>
                       Text(
                         'Frequently used',
                         style: TextStyle(
-                          color: AppColors.primary.withValues(alpha: 0.7),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.05 * 11,
@@ -490,7 +490,7 @@ class _BottomPanel extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           alignment: Alignment.center,
@@ -528,11 +528,11 @@ class _PreviewIcon extends StatelessWidget {
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
       ),
-      child: Icon(icon, color: AppColors.primary, size: 18),
+      child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 18),
     );
   }
 }

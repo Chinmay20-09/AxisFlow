@@ -34,13 +34,13 @@ class AxisButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool disabled = onPressed == null || isLoading;
     final Color background = variant == AxisButtonVariant.primary
-        ? AppColors.primary
+        ? Theme.of(context).colorScheme.primary
         : Colors.transparent;
     final Color foreground = variant == AxisButtonVariant.primary
         ? AppColors.onSurface
-        : AppColors.primary;
+        : Theme.of(context).colorScheme.primary;
     final BorderSide borderSide = variant == AxisButtonVariant.secondary
-        ? BorderSide(color: AppColors.primary.withValues(alpha: 0.18))
+        ? BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18))
         : BorderSide.none;
 
     return ElevatedButton(

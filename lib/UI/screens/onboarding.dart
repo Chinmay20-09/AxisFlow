@@ -138,7 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       Icon(
                                         p.icon,
                                         size: isWide ? 120 : 96,
-                                        color: AppColors.primary,
+                                        color: Theme.of(context).colorScheme.primary,
                                       ),
                                       const SizedBox(height: 24),
                                       Text(
@@ -198,7 +198,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     height: 10,
                                     decoration: BoxDecoration(
                                       color: active
-                                          ? AppColors.primary
+                                          ? Theme.of(context).colorScheme.primary
                                           : AppColors.surfaceContainer,
                                       borderRadius: BorderRadius.circular(20),
                                     ),
@@ -210,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ElevatedButton(
                                 onPressed: _next,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
                                   foregroundColor: AppColors.onPrimary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),

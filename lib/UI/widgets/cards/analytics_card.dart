@@ -41,7 +41,7 @@ class AnalyticsCard extends StatelessWidget {
           if (icon != null)
             Row(
               children: [
-                Icon(icon, color: AppColors.primary, size: AppSizes.iconLarge),
+                Icon(icon, color: Theme.of(context).colorScheme.primary, size: AppSizes.iconLarge),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -73,7 +73,7 @@ class AnalyticsCard extends StatelessWidget {
             Text(
               trend!,
               style: AppTextStyles.body.copyWith(
-                color: trendColor ?? AppColors.primary,
+                color: trendColor ?? Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),

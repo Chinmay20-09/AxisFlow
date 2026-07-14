@@ -287,10 +287,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: fav
-            ? AppColors.primary.withValues(alpha: 0.12)
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
             : AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        border: fav ? Border.all(color: AppColors.primary) : null,
+        border: fav ? Border.all(color: Theme.of(context).colorScheme.primary) : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -298,7 +298,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           Text(
             getCategoryDisplay(name),
             style: TextStyle(
-              color: fav ? AppColors.primary : AppColors.onSurface,
+              color: fav ? Theme.of(context).colorScheme.primary : AppColors.onSurface,
             ),
           ),
           const SizedBox(width: 8),
@@ -307,7 +307,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             child: Icon(
               fav ? Icons.star : Icons.star_border,
               size: 18,
-              color: fav ? AppColors.primary : AppColors.onSurfaceVariant,
+              color: fav ? Theme.of(context).colorScheme.primary : AppColors.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 6),

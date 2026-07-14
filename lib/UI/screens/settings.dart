@@ -108,10 +108,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: widget.controller,
               ),
             ),
-            title: const Text(
+            title: Text(
               'AxisFlow',
               style: TextStyle(
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 fontSize: 20,
                 fontWeight: FontWeight.w500,
               ),
@@ -234,7 +234,7 @@ class _GlassCard extends StatelessWidget {
             boxShadow: aiGlow
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.05),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                       blurRadius: 60,
                       spreadRadius: 20,
                     ),
@@ -266,7 +266,7 @@ class AppColorsardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.primary, size: 22),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
 
         const SizedBox(width: 12),
 
@@ -302,7 +302,7 @@ class _Toggle extends StatelessWidget {
         width: 48,
         height: 24,
         decoration: BoxDecoration(
-          color: value ? AppColors.primary : AppColors.surfaceContainerHigh,
+          color: value ? Theme.of(context).colorScheme.primary : AppColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Stack(
@@ -561,13 +561,13 @@ class _AiCard extends StatelessWidget {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text(
+              child: Text(
                 'GEIST AI ENGINE',
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.08 * 10,
@@ -591,8 +591,8 @@ class _AiCard extends StatelessWidget {
               ),
               Text(
                 freqLabel,
-                style: const TextStyle(
-                  color: AppColors.primary,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -605,11 +605,11 @@ class _AiCard extends StatelessWidget {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 4,
-              activeTrackColor: AppColors.primary,
+              activeTrackColor: Theme.of(context).colorScheme.primary,
               inactiveTrackColor: AppColors.surfaceContainer,
-              thumbColor: AppColors.primary,
+              thumbColor: Theme.of(context).colorScheme.primary,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-              overlayColor: AppColors.primary.withValues(alpha: 0.12),
+              overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
             ),
             child: Slider(
               value: freq,
@@ -671,10 +671,10 @@ class _PrivacyCard extends StatelessWidget {
           _PrivacyTile(
             icon: Icons.upload_file,
             label: 'Export CSV',
-            labelColor: AppColors.primary,
-            iconColor: AppColors.primary,
-            chevronColor: AppColors.primary.withValues(alpha: 0.5),
-            hoverColor: AppColors.primary.withValues(alpha: 0.05),
+            labelColor: Theme.of(context).colorScheme.primary,
+            iconColor: Theme.of(context).colorScheme.primary,
+            chevronColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+            hoverColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
             onTap: () async {
               final messenger = ScaffoldMessenger.of(context);
 
@@ -703,10 +703,10 @@ class _PrivacyCard extends StatelessWidget {
           _PrivacyTile(
             icon: Icons.download,
             label: 'Import CSV',
-            labelColor: AppColors.primary,
-            iconColor: AppColors.primary,
-            chevronColor: AppColors.primary.withValues(alpha: 0.5),
-            hoverColor: AppColors.primary.withValues(alpha: 0.05),
+            labelColor: Theme.of(context).colorScheme.primary,
+            iconColor: Theme.of(context).colorScheme.primary,
+            chevronColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+            hoverColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
             onTap: () async {
               // Open Import screen
               Navigator.of(context).push(

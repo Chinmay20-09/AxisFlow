@@ -25,7 +25,7 @@ class AiInsightCard extends StatelessWidget {
             children: [
               Expanded(child: Text(message, style: AppTextStyles.body)),
               const SizedBox(width: AppSpacing.md),
-              Icon(Icons.auto_awesome, color: AppColors.primary),
+              Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
             ],
           ),
         ),

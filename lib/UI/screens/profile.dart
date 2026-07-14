@@ -122,17 +122,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Row(
-                                          children: const [
+                                          children: [
                                             Icon(
                                               Icons.auto_awesome,
-                                              color: AppColors.primary,
+                                              color: Theme.of(context).colorScheme.primary,
                                               size: 18,
                                             ),
                                             SizedBox(width: 8),
                                             Text(
                                               'AI GENERATED',
                                               style: TextStyle(
-                                                color: AppColors.primary,
+                                                color: Theme.of(context).colorScheme.primary,
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -253,7 +253,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                     width: 2,
                   ),
                 ),
@@ -283,7 +283,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.background, width: 3),
                   ),
@@ -311,9 +311,9 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.primaryContainer.withValues(alpha: 0.1),
+            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
           ),
           child: Text(
             _userEmail ?? AppCredentials.userEmail,

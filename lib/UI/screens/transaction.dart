@@ -29,7 +29,7 @@ class AxisFlowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
+        colorScheme: ColorScheme.dark(
           primary: AppColors.primary,
           surface: AppColors.surface,
         ),
@@ -83,7 +83,7 @@ class AppDims {
 class AppTextStyles {
   AppTextStyles._();
 
-  static const appBarTitle = TextStyle(
+  static var appBarTitle = TextStyle(
     color: AppColors.primary,
     fontSize: 24,
     fontWeight: FontWeight.w600,
@@ -119,7 +119,7 @@ class AppTextStyles {
     letterSpacing: 0.55,
   );
 
-  static const aiLabel = TextStyle(
+  static var aiLabel = TextStyle(
     color: AppColors.primary,
     fontSize: 11,
     fontWeight: FontWeight.w600,
@@ -133,7 +133,7 @@ class AppTextStyles {
     height: 1.4,
   );
 
-  static const aiCta = TextStyle(
+  static var aiCta = TextStyle(
     color: AppColors.primary,
     fontSize: 11,
     fontWeight: FontWeight.w600,

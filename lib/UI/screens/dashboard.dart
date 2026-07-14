@@ -34,7 +34,7 @@ class AxisFlowInsightsScreen extends StatelessWidget {
             ? Icons.trending_up
             : Icons.trending_down;
         final monthIconColor = analytics.totalIncome > analytics.totalExpense
-            ? AppColors.primary
+            ? Theme.of(context).colorScheme.primary
             : AppColors.secondary;
 
         return Scaffold(
@@ -79,14 +79,14 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                                   vertical: AppSpacing.xxs,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
+                                  color: Theme.of(context).colorScheme.primary.withValues(
                                     alpha: 0.1,
                                   ),
                                   borderRadius: BorderRadius.circular(
                                     AppRadius.pill,
                                   ),
                                 ),
-                                child: const Text(
+                                child:  Text(
                                   'AI ANALYSIS',
                                   style: AppTextStyles.cardBadge,
                                 ),
@@ -112,7 +112,7 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                         const SizedBox(width: AppSpacing.xxl),
                         Icon(
                           Icons.psychology,
-                          color: AppColors.primary.withValues(alpha: 0.2),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                           size: AppSizes.chartDiameter / 1.66,
                         ),
                       ],
@@ -314,7 +314,7 @@ class _DashboardTopBar extends StatelessWidget {
           children: [
             MenuButton(scaffoldKey: scaffoldKey, controller: controller),
             const SizedBox(width: AppSpacing.sm),
-            const Text('AxisFlow', style: AppTextStyles.appTitle),
+             Text('AxisFlow', style: AppTextStyles.appTitle),
           ],
         ),
       ],

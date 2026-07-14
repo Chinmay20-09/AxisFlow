@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'AxisFlow',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 36,
                     fontWeight: FontWeight.w700,
                   ),

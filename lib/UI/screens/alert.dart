@@ -26,7 +26,7 @@ class AxisFlowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
+        colorScheme: ColorScheme.dark(
           primary: AppColors.primary,
           surface: AppColors.surface,
         ),
@@ -122,7 +122,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: IconButton(
-                  icon: const Icon(
+                  icon:  Icon(
                     Icons.notifications_active,
                     color: AppColors.primary,
                     size: 20,
@@ -363,7 +363,7 @@ class _AlertCard extends StatelessWidget {
                                       ),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       AppStrings.aiInsightBadge,
                                       style: TextStyle(
                                         color: AppColors.primary,

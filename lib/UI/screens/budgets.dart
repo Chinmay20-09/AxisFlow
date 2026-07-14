@@ -24,8 +24,8 @@ class AxisFlowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
+        colorScheme: ColorScheme.dark(
+          primary: Theme.of(context).colorScheme.primary,
           surface: AppColors.surface,
         ),
       ),
@@ -107,10 +107,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             ),
             title: Row(
               children: [
-                const Text(
+                 Text(
                   'AxisFlow',
                   style: TextStyle(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.48,
@@ -212,8 +212,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       switch (alloc.category.toLowerCase()) {
                         case 'food':
                           icon = Icons.restaurant;
-                          iconColor = AppColors.primary;
-                          iconBg = AppColors.primary.withValues(alpha: 0.1);
+                          iconColor = Theme.of(context).colorScheme.primary;
+                          iconBg = Theme.of(context).colorScheme.primary.withValues(alpha: 0.1);
                           break;
                         case 'travel':
                           icon = Icons.commute;
@@ -305,10 +305,10 @@ class _BentoRow extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'REMAINING BALANCE',
                           style: TextStyle(
-                            color: AppColors.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.1 * 11,
@@ -440,7 +440,7 @@ class _PulsingGlowState extends State<_PulsingGlow>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: (0.05)),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: (0.05)),
               blurRadius: 60,
               spreadRadius: 30,
             ),
@@ -470,7 +470,7 @@ class _PillButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: filled ? AppColors.primary : Colors.transparent,
+          color: filled ? Theme.of(context).colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
           border: filled
               ? null
@@ -544,11 +544,11 @@ class _BudgetCardState extends State<_BudgetCard>
       case BudgetStatus.onTrack:
         return Row(
           children: [
-            const Icon(Icons.check_circle, color: AppColors.primary, size: 14),
+             Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 14),
             const SizedBox(width: 6),
-            const Text(
+             Text(
               'On track',
-              style: TextStyle(color: AppColors.primary, fontSize: 12),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12),
             ),
           ],
         );
@@ -582,9 +582,9 @@ class _BudgetCardState extends State<_BudgetCard>
   Color get _barColor {
     switch (widget.item.status) {
       case BudgetStatus.caution:
-        return AppColors.primaryContainer;
+        return Theme.of(context).colorScheme.primaryContainer;
       case BudgetStatus.onTrack:
-        return AppColors.primary.withValues(alpha: (0.4));
+        return Theme.of(context).colorScheme.primary.withValues(alpha: (0.4));
       case BudgetStatus.critical:
         return AppColors.error;
       case BudgetStatus.pending:
