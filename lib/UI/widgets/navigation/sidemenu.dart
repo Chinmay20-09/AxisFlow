@@ -23,6 +23,7 @@ class _NavItem {
   final String? badge;
   final Widget? screen;
 
+  // ignore: unused_element_parameter
   const _NavItem(this.icon, this.label, {this.badge, this.screen});
 }
 
@@ -95,13 +96,12 @@ class _AppDrawerState extends State<AppDrawer>
         screen: ProfileScreen(controller: widget.controller),
       ),
 
-//      _NavItem(
-  //      Icons.notifications_rounded,
-    //    'Alerts',
+      //      _NavItem(
+      //      Icons.notifications_rounded,
+      //    'Alerts',
       //  badge: '3',
-        //screen: AlertsScreen(controller: widget.controller),
+      //screen: AlertsScreen(controller: widget.controller),
       //),
-
       _NavItem(
         Icons.settings_rounded,
         'Settings',
@@ -249,7 +249,7 @@ class _AppDrawerState extends State<AppDrawer>
             const Spacer(),
 
             // ── LOGOUT ──────────────────────────────
-            _LogoutButton(controller: widget.controller)
+            _LogoutButton(controller: widget.controller),
           ],
         ),
       ),
@@ -524,8 +524,8 @@ class _LogoutButtonState extends State<_LogoutButton> {
             final messenger = ScaffoldMessenger.of(context);
             final navigator = Navigator.of(context);
             debugPrint('Logout pressed');
-final res = await AuthService.instance.signOut();
-debugPrint('Logout result: $res');
+            final res = await AuthService.instance.signOut();
+            debugPrint('Logout result: $res');
             if (!mounted) return;
 
             if (res != null) {
@@ -534,7 +534,9 @@ debugPrint('Logout result: $res');
             }
 
             // Show success then navigate via AuthGate so app-level routing applies
-            messenger.showSnackBar(const SnackBar(content: Text('Signed out successfully')));
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Signed out successfully')),
+            );
             await Future.delayed(const Duration(milliseconds: 300));
 
             navigator.pushAndRemoveUntil(

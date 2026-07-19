@@ -283,39 +283,54 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   Widget _categoryChip(String name, bool income) {
     final fav = _favorites.contains(name);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: fav
-            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
-            : AppColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: fav ? Border.all(color: Theme.of(context).colorScheme.primary) : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            getCategoryDisplay(name),
-            style: TextStyle(
-              color: fav ? Theme.of(context).colorScheme.primary : AppColors.onSurface,
+
+    return GestureDetector(
+      onTap: () => _toggleFavorite(name),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: fav
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+              : AppColors.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
+          border: fav
+              ? Border.all(color: Theme.of(context).colorScheme.primary)
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              getCategoryDisplay(name),
+              style: TextStyle(
+                color: fav
+                    ? Theme.of(context).colorScheme.primary
+                    : AppColors.onSurface,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => _toggleFavorite(name),
-            child: Icon(
+
+            const SizedBox(width: 8),
+
+            Icon(
               fav ? Icons.star : Icons.star_border,
               size: 18,
-              color: fav ? Theme.of(context).colorScheme.primary : AppColors.onSurfaceVariant,
+              color: fav
+                  ? Theme.of(context).colorScheme.primary
+                  : AppColors.onSurfaceVariant,
             ),
-          ),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: () => _removeCategory(income, name),
-            child: const Icon(Icons.delete_outline, size: 18),
-          ),
-        ],
+
+            const SizedBox(width: 6),
+
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _removeCategory(income, name),
+              child: const Padding(
+                padding: EdgeInsets.all(2),
+                child: Icon(Icons.delete_outline, size: 18),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

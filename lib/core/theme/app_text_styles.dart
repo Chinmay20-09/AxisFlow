@@ -4,7 +4,7 @@ import '../constants/app_sizes.dart';
 import 'app_colors.dart';
 
 abstract class AppTextStyles {
-  static  TextStyle appTitle = TextStyle(
+  static TextStyle appTitle = TextStyle(
     color: AppColors.primary,
     fontSize: AppSizes.title,
     fontWeight: FontWeight.bold,
@@ -38,7 +38,7 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.bold,
   );
 
-  static  TextStyle cardBadge = TextStyle(
+  static TextStyle cardBadge = TextStyle(
     color: AppColors.primary,
     fontSize: AppSizes.badge,
     fontWeight: FontWeight.bold,

@@ -3,8 +3,8 @@ import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'package:axisflow/core/constants/app_spacing.dart';
 import 'package:axisflow/data/local/settings_db.dart';
-import 'home_screen.dart';
 import '../../controller/transaction_controller.dart';
+import 'auth/auth_gate.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final TransactionController controller;
@@ -63,7 +63,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => HomeScreen(controller: widget.controller),
+        builder: (_) => AuthGate(controller: widget.controller),
       ),
     );
   }
@@ -138,7 +138,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       Icon(
                                         p.icon,
                                         size: isWide ? 120 : 96,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                       ),
                                       const SizedBox(height: 24),
                                       Text(
@@ -198,7 +200,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     height: 10,
                                     decoration: BoxDecoration(
                                       color: active
-                                          ? Theme.of(context).colorScheme.primary
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
                                           : AppColors.surfaceContainer,
                                       borderRadius: BorderRadius.circular(20),
                                     ),
@@ -210,7 +214,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ElevatedButton(
                                 onPressed: _next,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                   foregroundColor: AppColors.onPrimary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),

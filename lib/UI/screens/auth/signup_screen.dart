@@ -107,10 +107,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(labelText: 'Email'),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty){
+                          if (v == null || v.trim().isEmpty) {
                             return 'Enter your email';
                           }
-                          if (!v.contains('@')){
+                          if (!v.contains('@')) {
                             return 'Enter a valid email';
                           }
                           return null;
@@ -133,7 +133,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                         ),
                         validator: (v) {
-                          if (v == null || v.length < 8){
+                          if (v == null || v.length < 8) {
                             return 'Password must be 8+ characters';
                           }
                           return null;
@@ -147,10 +147,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           labelText: 'Confirm Password',
                         ),
                         validator: (v) {
-                          if (v == null || v.isEmpty){
+                          if (v == null || v.isEmpty) {
                             return 'Confirm your password';
                           }
-                          if (v != _passwordCtrl.text){
+                          if (v != _passwordCtrl.text) {
                             return 'Passwords do not match';
                           }
                           return null;

@@ -122,7 +122,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: IconButton(
-                  icon:  Icon(
+                  icon: Icon(
                     Icons.notifications_active,
                     color: AppColors.primary,
                     size: 20,

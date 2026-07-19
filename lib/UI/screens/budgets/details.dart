@@ -20,7 +20,7 @@ class AxisFlowApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AxisFlow Budgets',
+      title: 'AxisFlow BudgetsDetail',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.background,
@@ -29,7 +29,7 @@ class AxisFlowApp extends StatelessWidget {
           surface: AppColors.surface,
         ),
       ),
-      home: BudgetsScreen(controller: controller),
+      home: BudgetsDetailScreen(controller: controller),
     );
   }
 }
@@ -37,7 +37,7 @@ class AxisFlowApp extends StatelessWidget {
 // Using shared AppColors from core/app_colors.dart
 
 // ── Data model ─────────────────────────────────────────────────────────────────
-enum BudgetStatus { caution, onTrack, critical, pending }
+enum BudgetsDetailtatus { caution, onTrack, critical, pending }
 
 class BudgetItem {
   final IconData icon;
@@ -46,7 +46,7 @@ class BudgetItem {
   final String total;
   final String remaining;
   final double progress;
-  final BudgetStatus status;
+  final BudgetsDetailtatus status;
   final Color iconBg;
   final Color iconColor;
 
@@ -63,18 +63,18 @@ class BudgetItem {
   });
 }
 
-// Budgets are computed at runtime from analytics (top expense categories). The previous static demo list was removed.
+// BudgetsDetail are computed at runtime from analytics (top expense categories). The previous static demo list was removed.
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
-class BudgetsScreen extends StatefulWidget {
+class BudgetsDetailScreen extends StatefulWidget {
   final TransactionController controller;
-  const BudgetsScreen({super.key, required this.controller});
+  const BudgetsDetailScreen({super.key, required this.controller});
 
   @override
-  State<BudgetsScreen> createState() => _BudgetsScreenState();
+  State<BudgetsDetailScreen> createState() => _BudgetsDetailScreenState();
 }
 
-class _BudgetsScreenState extends State<BudgetsScreen> {
+class _BudgetsDetailScreenState extends State<BudgetsDetailScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -145,7 +145,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               delegate: SliverChildListDelegate([
                 // Page heading
                 const Text(
-                  'Budgets',
+                  'BudgetsDetail',
                   style: TextStyle(
                     color: AppColors.onSurface,
                     fontSize: 24,
@@ -167,7 +167,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 const SizedBox(height: 32),
 
                 // ── Category list ──────────────────────────────────────────
-                
               ]),
             ),
           ),
@@ -437,7 +436,7 @@ class _BudgetCardState extends State<_BudgetCard>
 
   Widget _statusRow() {
     switch (widget.item.status) {
-      case BudgetStatus.caution:
+      case BudgetsDetailtatus.caution:
         return Row(
           children: [
             const Icon(Icons.warning, color: AppColors.error, size: 14),
@@ -448,7 +447,7 @@ class _BudgetCardState extends State<_BudgetCard>
             ),
           ],
         );
-      case BudgetStatus.onTrack:
+      case BudgetsDetailtatus.onTrack:
         return Row(
           children: [
             Icon(
@@ -466,7 +465,7 @@ class _BudgetCardState extends State<_BudgetCard>
             ),
           ],
         );
-      case BudgetStatus.critical:
+      case BudgetsDetailtatus.critical:
         return Row(
           children: [
             const Icon(Icons.error, color: AppColors.amber, size: 14),
@@ -482,7 +481,7 @@ class _BudgetCardState extends State<_BudgetCard>
             ),
           ],
         );
-      case BudgetStatus.pending:
+      case BudgetsDetailtatus.pending:
         return Text(
           'Pending bills detected',
           style: TextStyle(
@@ -495,22 +494,22 @@ class _BudgetCardState extends State<_BudgetCard>
 
   Color get _barColor {
     switch (widget.item.status) {
-      case BudgetStatus.caution:
+      case BudgetsDetailtatus.caution:
         return Theme.of(context).colorScheme.primaryContainer;
-      case BudgetStatus.onTrack:
+      case BudgetsDetailtatus.onTrack:
         return Theme.of(context).colorScheme.primary.withValues(alpha: (0.4));
-      case BudgetStatus.critical:
+      case BudgetsDetailtatus.critical:
         return AppColors.error;
-      case BudgetStatus.pending:
+      case BudgetsDetailtatus.pending:
         return AppColors.onSurfaceVariant.withValues(alpha: (0.3));
     }
   }
 
-  Color get _amountColor => widget.item.status == BudgetStatus.critical
+  Color get _amountColor => widget.item.status == BudgetsDetailtatus.critical
       ? AppColors.error
       : AppColors.onSurface;
 
-  Color get _remainingColor => widget.item.status == BudgetStatus.critical
+  Color get _remainingColor => widget.item.status == BudgetsDetailtatus.critical
       ? AppColors.error.withValues(alpha: (0.6))
       : AppColors.secondary.withValues(alpha: (0.6));
 

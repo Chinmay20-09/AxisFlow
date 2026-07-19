@@ -35,7 +35,7 @@ void main() async {
   // Initialize Supabase (requires filling lib/core/supabase_config.dart)
   await Supabase.initialize(
     url: supabaseUrl,
-   publishableKey: supabasePublishableKey,
+    publishableKey: supabasePublishableKey,
   );
 
   // Init SettingsService (loads persisted prefs)
@@ -60,7 +60,6 @@ class AxisFlowApp extends StatelessWidget {
     return AnimatedBuilder(
       animation: SettingsService.instance,
       builder: (context, _) {
-
         return MaterialApp(
           title: 'AxisFlow',
           debugShowCheckedModeBanner: false,

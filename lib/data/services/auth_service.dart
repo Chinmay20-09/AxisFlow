@@ -55,9 +55,9 @@ class AuthService extends ChangeNotifier {
     } on AuthException catch (e) {
       return e.message;
     } catch (e) {
-  debugPrint('SIGNUP ERROR: $e');
-  return e.toString();
-}
+      debugPrint('SIGNUP ERROR: $e');
+      return e.toString();
+    }
   }
 
   Future<String?> signIn(String email, String password) async {

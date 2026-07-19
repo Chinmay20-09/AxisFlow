@@ -79,14 +79,14 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                                   vertical: AppSpacing.xxs,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary.withValues(
-                                    alpha: 0.1,
-                                  ),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(
                                     AppRadius.pill,
                                   ),
                                 ),
-                                child:  Text(
+                                child: Text(
                                   'AI ANALYSIS',
                                   style: AppTextStyles.cardBadge,
                                 ),
@@ -112,7 +112,9 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                         const SizedBox(width: AppSpacing.xxl),
                         Icon(
                           Icons.psychology,
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.2),
                           size: AppSizes.chartDiameter / 1.66,
                         ),
                       ],
@@ -190,24 +192,36 @@ class AxisFlowInsightsScreen extends StatelessWidget {
                                     centerSpaceRadius:
                                         AppSizes.chartCenterRadius,
                                     sectionsSpace: 2,
-                                    sections: topCategories
-                                        .take(3)
-                                        .toList()
-                                        .asMap()
-                                        .entries
-                                        .map((entry) {
-                                          final index = entry.key;
+                                    sections: (() {
+                                      final chartData = topCategories
+                                          .take(3)
+                                          .toList();
+                                      final total = chartData.fold<double>(
+                                        0,
+                                        (sum, item) => sum + item.total,
+                                      );
 
-                                          return PieChartSectionData(
-                                            color: getRankColor(index),
-                                            titleStyle: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          );
-                                        })
-                                        .toList(),
+                                      return chartData.asMap().entries.map((
+                                        entry,
+                                      ) {
+                                        final index = entry.key;
+                                        final item = entry.value;
+
+                                        return PieChartSectionData(
+                                          value: item.total.toDouble(),
+                                          color: getRankColor(index),
+                                          radius: 50,
+                                          title: total == 0
+                                              ? '0%'
+                                              : '${((item.total / total) * 100).round()}%',
+                                          titleStyle: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        );
+                                      }).toList();
+                                    })(),
                                   ),
                                 ),
                               ),
@@ -314,7 +328,7 @@ class _DashboardTopBar extends StatelessWidget {
           children: [
             MenuButton(scaffoldKey: scaffoldKey, controller: controller),
             const SizedBox(width: AppSpacing.sm),
-             Text('AxisFlow', style: AppTextStyles.appTitle),
+            Text('AxisFlow', style: AppTextStyles.appTitle),
           ],
         ),
       ],

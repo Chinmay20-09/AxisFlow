@@ -96,7 +96,7 @@ class AppTheme {
 
     splashFactory: NoSplash.splashFactory,
 
-    colorScheme:  ColorScheme.dark(
+    colorScheme: ColorScheme.dark(
       primary: primary,
       surface: surface,
       error: expense,
@@ -168,7 +168,7 @@ class AppTheme {
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusSmall),
-        borderSide:  BorderSide(color: primary, width: 1.5),
+        borderSide: BorderSide(color: primary, width: 1.5),
       ),
 
       labelStyle: const TextStyle(color: textSecondary),

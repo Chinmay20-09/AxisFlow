@@ -234,7 +234,9 @@ class _GlassCard extends StatelessWidget {
             boxShadow: aiGlow
                 ? [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.05),
                       blurRadius: 60,
                       spreadRadius: 20,
                     ),
@@ -302,7 +304,9 @@ class _Toggle extends StatelessWidget {
         width: 48,
         height: 24,
         decoration: BoxDecoration(
-          color: value ? Theme.of(context).colorScheme.primary : AppColors.surfaceContainerHigh,
+          color: value
+              ? Theme.of(context).colorScheme.primary
+              : AppColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Stack(
@@ -561,7 +565,9 @@ class _AiCard extends StatelessWidget {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -609,7 +615,9 @@ class _AiCard extends StatelessWidget {
               inactiveTrackColor: AppColors.surfaceContainer,
               thumbColor: Theme.of(context).colorScheme.primary,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-              overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+              overlayColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.12),
             ),
             child: Slider(
               value: freq,
@@ -673,8 +681,12 @@ class _PrivacyCard extends StatelessWidget {
             label: 'Export CSV',
             labelColor: Theme.of(context).colorScheme.primary,
             iconColor: Theme.of(context).colorScheme.primary,
-            chevronColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-            hoverColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+            chevronColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.5),
+            hoverColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.05),
             onTap: () async {
               final messenger = ScaffoldMessenger.of(context);
 
@@ -705,8 +717,12 @@ class _PrivacyCard extends StatelessWidget {
             label: 'Import CSV',
             labelColor: Theme.of(context).colorScheme.primary,
             iconColor: Theme.of(context).colorScheme.primary,
-            chevronColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-            hoverColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+            chevronColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.5),
+            hoverColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.05),
             onTap: () async {
               // Open Import screen
               Navigator.of(context).push(

@@ -288,7 +288,9 @@ class _CategoryCardState extends State<_CategoryCard>
             boxShadow: widget.selected
                 ? [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
                       blurRadius: 20,
                       spreadRadius: 0,
                     ),
@@ -344,7 +346,9 @@ class _CategoryCardState extends State<_CategoryCard>
                       Text(
                         'Frequently used',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.7),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.05 * 11,
@@ -530,7 +534,9 @@ class _PreviewIcon extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         shape: BoxShape.circle,
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+        ),
       ),
       child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 18),
     );

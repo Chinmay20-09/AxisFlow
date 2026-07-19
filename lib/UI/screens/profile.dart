@@ -19,9 +19,7 @@ final supabase = Supabase.instance.client;
 class ProfileScreen extends StatefulWidget {
   final TransactionController controller;
   const ProfileScreen({super.key, required this.controller});
-    
-  
-   
+
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -130,14 +128,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           children: [
                                             Icon(
                                               Icons.auto_awesome,
-                                              color: Theme.of(context).colorScheme.primary,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
                                               size: 18,
                                             ),
                                             SizedBox(width: 8),
                                             Text(
                                               'AI GENERATED',
                                               style: TextStyle(
-                                                color: Theme.of(context).colorScheme.primary,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -229,7 +231,7 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
     } catch (e) {
       // Handle errors (e.g. permission denied, unsupported format) gracefully
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update avatar: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update avatar: $e')));
     }
   }
 
@@ -258,7 +260,9 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
                     width: 2,
                   ),
                 ),
@@ -316,9 +320,15 @@ class _ProfileHeaderState extends State<_ProfileHeader> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.1),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
+            ),
           ),
           child: Text(
             _userEmail ?? AppCredentials.userEmail,
@@ -468,8 +478,8 @@ class _LogoutButtonState extends State<_LogoutButton> {
             final messenger = ScaffoldMessenger.of(context);
             final navigator = Navigator.of(context);
             debugPrint('Logout pressed');
-final res = await AuthService.instance.signOut();
-debugPrint('Logout result: $res');
+            final res = await AuthService.instance.signOut();
+            debugPrint('Logout result: $res');
             if (!mounted) return;
 
             if (res != null) {
@@ -478,7 +488,9 @@ debugPrint('Logout result: $res');
             }
 
             // Show success then navigate via AuthGate so app-level routing applies
-            messenger.showSnackBar(const SnackBar(content: Text('Signed out successfully')));
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Signed out successfully')),
+            );
             await Future.delayed(const Duration(milliseconds: 300));
 
             navigator.pushAndRemoveUntil(

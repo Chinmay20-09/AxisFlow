@@ -41,7 +41,11 @@ class AnalyticsCard extends StatelessWidget {
           if (icon != null)
             Row(
               children: [
-                Icon(icon, color: Theme.of(context).colorScheme.primary, size: AppSizes.iconLarge),
+                Icon(
+                  icon,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: AppSizes.iconLarge,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(

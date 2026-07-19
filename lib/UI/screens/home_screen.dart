@@ -102,7 +102,7 @@ class _GreetingSection extends StatelessWidget {
             Container(
               width: AppSpacing.xs,
               height: AppSpacing.xs,
-              decoration:  BoxDecoration(
+              decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 shape: BoxShape.circle,
               ),
@@ -146,7 +146,9 @@ class _TodayFlow extends StatelessWidget {
           Text(
             amountString,
             style: AppTextStyles.sectionTitle.copyWith(
-              color: amount >= 0 ? Theme.of(context).colorScheme.primary : AppColors.secondary,
+              color: amount >= 0
+                  ? Theme.of(context).colorScheme.primary
+                  : AppColors.secondary,
               fontSize: 42,
               fontWeight: FontWeight.bold,
             ),

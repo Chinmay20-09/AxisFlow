@@ -1,6 +1,12 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class AppCredentials {
-  static const userName = 'Chinmay';
-  static const userEmail = 'chinmay@example.com';
+  static User? get user => Supabase.instance.client.auth.currentUser;
+
+  static String get userName =>
+      user?.userMetadata?['name'] as String? ?? 'User';
+
+  static String get userEmail => user?.email ?? 'No Email';
   static const userRole = 'Developer';
   static const userPlan = 'AXIS PREMIUM';
   static const apiKey = 'YOUR_API_KEY';
