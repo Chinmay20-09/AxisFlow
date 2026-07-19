@@ -7,63 +7,9 @@ import 'package:axisflow/ui/widgets/navigation/menu_button.dart';
 import 'package:axisflow/ui/widgets/cards/ai_insight_card.dart';
 import 'package:axisflow/ui/widgets/cards/glass_card.dart';
 import 'package:axisflow/core/formatters.dart';
-
-void main() {
-  runApp(AxisFlowApp());
-}
-
-class AxisFlowApp extends StatelessWidget {
-  final TransactionController controller = TransactionController()..load();
-
-  AxisFlowApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AxisFlow Budgets',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.dark(
-          primary: Theme.of(context).colorScheme.primary,
-          surface: AppColors.surface,
-        ),
-      ),
-      home: BudgetsScreen(controller: controller),
-    );
-  }
-}
-
-// Using shared AppColors from core/app_colors.dart
-
-// ── Data model ─────────────────────────────────────────────────────────────────
-enum BudgetStatus { caution, onTrack, critical, pending }
-
-class BudgetItem {
-  final IconData icon;
-  final String title;
-  final String spent;
-  final String total;
-  final String remaining;
-  final double progress;
-  final BudgetStatus status;
-  final Color iconBg;
-  final Color iconColor;
-
-  const BudgetItem({
-    required this.icon,
-    required this.title,
-    required this.spent,
-    required this.total,
-    required this.remaining,
-    required this.progress,
-    required this.status,
-    required this.iconBg,
-    required this.iconColor,
-  });
-}
-
-// Budgets are computed at runtime from analytics (top expense categories). The previous static demo list was removed.
+import 'package:axisflow/ui/screens/budgets/details.dart';
+import 'package:axisflow/ui/widgets/pulsing_glow.dart';
+import 'package:axisflow/ui/screens/budgets/budget_planner.dart';
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 class BudgetsScreen extends StatefulWidget {
@@ -164,10 +110,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
 
                 // ── Bento row: Remaining + AI ──────────────────────────────
                 _BentoRow(controller: widget.controller),
-                const SizedBox(height: 32),
-
-                // ── Category list ──────────────────────────────────────────
-                
               ]),
             ),
           ),
@@ -202,7 +144,7 @@ class _BentoRow extends StatelessWidget {
               child: Stack(
                 children: [
                   // Ambient glow blob
-                  Positioned(top: -32, right: -32, child: _PulsingGlow()),
+                  Positioned(top: -32, right: -32, child: const PulsingGlow()),
                   Padding(
                     padding: const EdgeInsets.all(28),
                     child: Column(
@@ -235,9 +177,7 @@ class _BentoRow extends StatelessWidget {
                             Text(
                               'left this month',
                               style: TextStyle(
-                                color: AppColors.secondary.withValues(
-                                  alpha: (0.6),
-                                ),
+                                color: AppColors.textPrimary,
                                 fontSize: 14,
                               ),
                             ),
@@ -250,10 +190,11 @@ class _BentoRow extends StatelessWidget {
                               label: 'Adjust Limits',
                               filled: true,
                               onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Adjust Limits not implemented',
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => BudgetPlannerScreen(
+                                      controller: controller,
                                     ),
                                   ),
                                 );
@@ -261,12 +202,15 @@ class _BentoRow extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             _PillButton(
-                              label: 'Details',
+                              label: 'View Details',
                               filled: false,
                               onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Details not implemented'),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => BudgetDetailsScreen(
+                                      controller: controller,
+                                    ),
                                   ),
                                 );
                               },
@@ -302,59 +246,6 @@ class _BentoRow extends StatelessWidget {
   }
 }
 
-// ── Pulsing glow blob ──────────────────────────────────────────────────────────
-class _PulsingGlow extends StatefulWidget {
-  @override
-  State<_PulsingGlow> createState() => _PulsingGlowState();
-}
-
-class _PulsingGlowState extends State<_PulsingGlow>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _opacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
-    _opacity = Tween<double>(
-      begin: 0.5,
-      end: 0.8,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _opacity,
-      child: Container(
-        width: 128,
-        height: 128,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: (0.05)),
-              blurRadius: 60,
-              spreadRadius: 30,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── Pill buttons ───────────────────────────────────────────────────────────────
 class _PillButton extends StatelessWidget {
@@ -397,239 +288,4 @@ class _PillButton extends StatelessWidget {
   }
 }
 
-// ── Budget card ────────────────────────────────────────────────────────────────
-class _BudgetCard extends StatefulWidget {
-  final BudgetItem item;
 
-  const _BudgetCard({required this.item});
-
-  @override
-  State<_BudgetCard> createState() => _BudgetCardState();
-}
-
-class _BudgetCardState extends State<_BudgetCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _progress;
-  bool _hovered = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _progress = Tween<double>(
-      begin: 0,
-      end: widget.item.progress,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _ctrl.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Widget _statusRow() {
-    switch (widget.item.status) {
-      case BudgetStatus.caution:
-        return Row(
-          children: [
-            const Icon(Icons.warning, color: AppColors.error, size: 14),
-            const SizedBox(width: 6),
-            const Text(
-              'Caution: Over 50% limit reached',
-              style: TextStyle(color: AppColors.error, fontSize: 12),
-            ),
-          ],
-        );
-      case BudgetStatus.onTrack:
-        return Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: Theme.of(context).colorScheme.primary,
-              size: 14,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'On track',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        );
-      case BudgetStatus.critical:
-        return Row(
-          children: [
-            const Icon(Icons.error, color: AppColors.amber, size: 14),
-            const SizedBox(width: 6),
-            const Text(
-              'CRITICAL: ALMOST EXCEEDED',
-              style: TextStyle(
-                color: AppColors.error,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.08 * 11,
-              ),
-            ),
-          ],
-        );
-      case BudgetStatus.pending:
-        return Text(
-          'Pending bills detected',
-          style: TextStyle(
-            color: AppColors.secondary.withValues(alpha: (0.6)),
-            fontSize: 12,
-          ),
-        );
-    }
-  }
-
-  Color get _barColor {
-    switch (widget.item.status) {
-      case BudgetStatus.caution:
-        return Theme.of(context).colorScheme.primaryContainer;
-      case BudgetStatus.onTrack:
-        return Theme.of(context).colorScheme.primary.withValues(alpha: (0.4));
-      case BudgetStatus.critical:
-        return AppColors.error;
-      case BudgetStatus.pending:
-        return AppColors.onSurfaceVariant.withValues(alpha: (0.3));
-    }
-  }
-
-  Color get _amountColor => widget.item.status == BudgetStatus.critical
-      ? AppColors.error
-      : AppColors.onSurface;
-
-  Color get _remainingColor => widget.item.status == BudgetStatus.critical
-      ? AppColors.error.withValues(alpha: (0.6))
-      : AppColors.secondary.withValues(alpha: (0.6));
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: () {},
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: _hovered
-                ? Colors.white.withValues(alpha: (0.06))
-                : Colors.white.withValues(alpha: (0.04)),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: (0.08))),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // Top row
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Icon
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: widget.item.iconBg,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            widget.item.icon,
-                            color: widget.item.iconColor,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-
-                        // Title + status
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.item.title,
-                                style: const TextStyle(
-                                  color: AppColors.onSurface,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              _statusRow(),
-                            ],
-                          ),
-                        ),
-
-                        // Amounts
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${widget.item.spent} / ${widget.item.total}',
-                              style: TextStyle(
-                                color: _amountColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.item.remaining,
-                              style: TextStyle(
-                                color: _remainingColor,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Progress bar
-                    AnimatedBuilder(
-                      animation: _progress,
-                      builder: (context, _) {
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
-                          child: LinearProgressIndicator(
-                            value: _progress.value,
-                            minHeight: 6,
-                            backgroundColor: Colors.white.withValues(
-                              alpha: (0.05),
-                            ),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              _barColor,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
