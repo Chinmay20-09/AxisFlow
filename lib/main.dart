@@ -48,8 +48,10 @@ void main() async {
   // Init controller
   final controller = TransactionController()..load();
 
-  // PHASE 1 — Start SMS bridge
-  await SmsService().initialize();
+  // Init SMS bridge with auto-save integration
+  final smsService = SmsService();
+  smsService.setController(controller);
+  await smsService.initialize();
 
   runApp(AxisFlowApp(controller: controller));
 }
