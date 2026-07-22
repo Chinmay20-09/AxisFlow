@@ -49,5 +49,7 @@ abstract class AppColors {
   static const Color label = Color(0xFFE4E6F0);
   static const Color accentRed = Color(0xFFFF6B6B);
   static const Color border = Color(0xFF2A2C38);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color tertiary = Color(0xFFA78BFA);
   static const Color black = Color(0xFF0F1114);
 }

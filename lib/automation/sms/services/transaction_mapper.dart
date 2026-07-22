@@ -1,8 +1,8 @@
 // ignore_for_file: avoid_print
 
-import 'dart:math';
 import 'package:axisflow/data/models/transaction_model.dart';
 import '../models/processing_result.dart';
+import 'dart:convert';
 
 /// Maps a [ProcessingResult] into the app's [Transaction] model.
 ///
@@ -37,7 +37,7 @@ class TransactionMapper {
 
     print('[TRACE] toTransaction: ✓ mapping to Transaction (amount=${result.amount}, timestamp=$timestamp)');
     return Transaction(
-      id: 'sms_${timestamp.millisecondsSinceEpoch}_${Random().nextInt(99999)}',
+      id: _deterministicId(result, timestamp),
       amount: result.amount!,
       type: _mapTransactionType(result),
       note: _buildNote(result),
@@ -65,6 +65,27 @@ class TransactionMapper {
         // Default to expense for unrecognized transaction types
         return TransactionType.expense;
     }
+  }
+
+  /// Generate a deterministic, unique ID for a transaction based on
+  /// SMS content rather than random chance.
+  ///
+  /// Uses a hash of [sender] + [amount] + [merchant] + [referenceNumber]
+  /// + [timestamp] so the same SMS always produces the same ID.
+  /// Two different SMS events will produce different IDs.
+  static String _deterministicId(ProcessingResult result, DateTime timestamp) {
+    final raw = '${result.sender}|${result.amount}|${result.merchant}|'
+        '${result.referenceNumber}|${timestamp.millisecondsSinceEpoch}';
+    final bytes = utf8.encode(raw);
+    // Simple hash: take first 12 hex chars of SHA256-like digest.
+    // Dart doesn't have built-in SHA256 without crypto package,
+    // so we use a stable hash combining approach.
+    int hash = 17;
+    for (final byte in bytes) {
+      hash = hash * 31 + byte;
+    }
+    final hashStr = hash.toRadixString(16).padLeft(8, '0');
+    return 'sms_${timestamp.millisecondsSinceEpoch}_$hashStr';
   }
 
   /// Build a structured note string from the processing result.

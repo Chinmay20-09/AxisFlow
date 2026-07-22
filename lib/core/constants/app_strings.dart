@@ -76,3 +76,46 @@ String formatTime(DateTime dt) {
   return '${dt.hour.toString().padLeft(2, '0')}:'
       '${dt.minute.toString().padLeft(2, '0')}';
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Support & Development screen strings
+// ═══════════════════════════════════════════════════════════════════════════
+
+// These are placed at the top level so the screen can use them directly.
+// Using them as AppStrings members would require moving them into the class.
+
+const String supportScreenTitle = 'Support & Development';
+
+const String currencySymbol = '\$';
+
+const String supportIntro =
+    'AxisFlow is free and always will be.'
+
+    'Your support helps fund:'
+
+'    • AI features\n'
+     '• Cloud servers\n'
+     '• Faster updates';
+
+const String supportThankYouTitle = 'You\'re Awesome!';
+
+const String supportThankYouBody =
+    'Every contribution — big or small — helps us keep building '
+    'better tools for your financial journey.';
+
+const String whySupportHeading = 'WHY SUPPORT?';
+
+const String chooseAmountHeading = 'CHOOSE AMOUNT';
+
+const String supportCtaLabel = 'Support Development';
+
+const String otherWaysHeading = 'OTHER WAYS TO HELP';
+
+const String transparencyQuestion = 'Where does the money go?';
+
+const String transparencyIntro =
+    '100% of contributions go directly to improving AxisFlow. '
+    'Here\'s the current allocation:';
+
+const String supportFooterNote =
+    'AxisFlow is built with \u2764\uFE0F by a small independent team.';

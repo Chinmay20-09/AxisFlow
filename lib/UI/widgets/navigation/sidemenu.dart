@@ -13,6 +13,9 @@ import 'package:axisflow/ui/screens/dashboard.dart';
 import 'package:axisflow/core/theme/app_colors.dart';
 import 'package:axisflow/ui/screens/transaction.dart';
 import 'package:axisflow/ui/screens/auth/auth_gate.dart';
+import 'package:axisflow/ui/screens/alert.dart';
+import 'package:axisflow/ui/screens/support_development_screen.dart';
+
 
 // ─────────────────────────────────────────────
 //  DATA MODEL
@@ -96,16 +99,21 @@ class _AppDrawerState extends State<AppDrawer>
         screen: ProfileScreen(controller: widget.controller),
       ),
 
-      //      _NavItem(
-      //      Icons.notifications_rounded,
-      //    'Alerts',
-      //  badge: '3',
-      //screen: AlertsScreen(controller: widget.controller),
-      //),
+      _NavItem(
+        Icons.notifications_rounded,
+        'Alerts',
+        badge: '3',
+        screen: AlertsScreen(controller: widget.controller),
+      ),
       _NavItem(
         Icons.settings_rounded,
         'Settings',
         screen: SettingsScreen(controller: widget.controller),
+      ),
+      _NavItem(
+        Icons.favorite,
+        'Support Dev',
+        screen: const SupportDevelopmentScreen(),
       ),
     ];
     _ctrl = AnimationController(

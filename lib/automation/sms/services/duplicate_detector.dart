@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:axisflow/data/models/transaction_model.dart';
 import '../models/processing_result.dart';
 
 /// Duplicate detection for SMS transactions.
@@ -58,6 +59,110 @@ class DuplicateDetector {
 
     print('[TRACE]   → no duplicate found — returning false');
     return false;
+  }
+
+  /// Check if [current] matches any existing [Transaction] in [dbTransactions].
+  ///
+  /// This is the database-level duplicate check that runs BEFORE insertion.
+  /// It compares structured fields from [current] against parsed values
+  /// extracted from each transaction's note field.
+  ///
+  /// Priority order (same as [_isDuplicatePair]):
+  /// 1. If reference number exists → compare reference numbers.
+  /// 2. Compare sender + amount + merchant within time window.
+  /// 3. Body comparison only as final fallback.
+  static bool existsInDatabase(
+    ProcessingResult current,
+    List<Transaction> dbTransactions, {
+    int timeWindowMs = defaultTimeWindowMs,
+  }) {
+    if (dbTransactions.isEmpty) return false;
+
+    for (final tx in dbTransactions) {
+      // Extract fields from the transaction's note (which stores structured data)
+      final txSender = _extractSenderFromNote(tx.note);
+      final txMerchant = _extractMerchantFromNote(tx.note);
+      final txRef = _extractRefFromNote(tx.note);
+
+      final sameSender = txSender != null &&
+          current.sender.toUpperCase() == txSender.toUpperCase();
+
+      // ── Priority 1: Same reference number ───────────────────────────
+      if (current.referenceNumber != null &&
+          txRef != null &&
+          current.referenceNumber == txRef) {
+        print('[TRACE]   DB check: ref "${current.referenceNumber}" matches → TRUE');
+        return true;
+      }
+
+      // Must have same sender for further comparison
+      if (!sameSender) continue;
+
+      // Must be within time window
+      final txTime = tx.createdAt.millisecondsSinceEpoch;
+      final timeDiff = (current.timestamp - txTime).abs();
+      if (timeDiff > timeWindowMs) continue;
+
+      // ── Priority 2: Structured field comparison ─────────────────────
+      final sameAmount = current.amount != null &&
+          (current.amount! - tx.amount).abs() < 0.01;
+
+      final sameMerchant = current.merchant != null &&
+          txMerchant != null &&
+          current.merchant!.toUpperCase() == txMerchant.toUpperCase();
+
+      if (sameAmount && sameMerchant) {
+        print('[TRACE]   DB check: amount=${current.amount} +'
+            ' merchant="${current.merchant}" matches tx "${tx.id}" → TRUE');
+        return true;
+      }
+
+      // ── Priority 3: Fallback body equality ──────────────────────────
+      final noStructuredData = current.amount == null &&
+          current.merchant == null &&
+          current.referenceNumber == null;
+
+      if (noStructuredData) {
+        // Compare note as approximation of body
+        final bodyMatch = tx.note.contains(current.rawSms);
+        if (bodyMatch) {
+          print('[TRACE]   DB check: body match fallback → TRUE');
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /// Extract sender from a transaction note line ("Sender: HDFCBK").
+  static String? _extractSenderFromNote(String note) {
+    for (final line in note.split('\n')) {
+      if (line.startsWith('Sender: ')) {
+        return line.substring('Sender: '.length).trim();
+      }
+    }
+    return null;
+  }
+
+  /// Extract merchant from a transaction note line ("Merchant: STARBUCKS").
+  static String? _extractMerchantFromNote(String note) {
+    for (final line in note.split('\n')) {
+      if (line.startsWith('Merchant: ')) {
+        return line.substring('Merchant: '.length).trim();
+      }
+    }
+    return null;
+  }
+
+  /// Extract reference number from a transaction note line ("Ref: ABC123").
+  static String? _extractRefFromNote(String note) {
+    for (final line in note.split('\n')) {
+      if (line.startsWith('Ref: ')) {
+        return line.substring('Ref: '.length).trim();
+      }
+    }
+    return null;
   }
 
   /// Check if two [ProcessingResult] instances represent the same transaction.

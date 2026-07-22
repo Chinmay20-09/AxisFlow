@@ -7,32 +7,52 @@ class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final bool showBorder;
-  final Color backgroundColor;
-  final BorderRadiusGeometry borderRadius;
+  final Color? backgroundColor;
+  final BorderRadius borderRadius;
+  final VoidCallback? onTap;
+  final double borderWidth;
+  final Color? activeBorderColor;
 
   const GlassCard({
     required this.child,
     this.padding = const EdgeInsets.all(AppSpacing.xl),
     this.showBorder = true,
-    this.backgroundColor = AppColors.card,
+    this.backgroundColor,
     this.borderRadius = const BorderRadius.all(
       Radius.circular(AppRadius.extraLarge),
     ),
+    this.onTap,
+    this.borderWidth = 1,
+    this.activeBorderColor,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final effectiveBg = backgroundColor ?? AppColors.card;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: padding,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: effectiveBg,
         borderRadius: borderRadius,
         border: showBorder
-            ? Border.all(color: Colors.white.withValues(alpha: 0.08))
+            ? Border.all(
+                color: activeBorderColor ?? Colors.white.withValues(alpha: 0.08),
+                width: borderWidth,
+              )
             : null,
       ),
-      child: child,
+      child: onTap != null
+          ? InkWell(
+              onTap: onTap,
+              borderRadius: borderRadius,
+              splashColor: Colors.white.withValues(alpha: 0.05),
+              highlightColor: Colors.white.withValues(alpha: 0.03),
+              child: child,
+            )
+          : child,
     );
   }
 }
