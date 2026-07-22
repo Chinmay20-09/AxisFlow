@@ -9,13 +9,17 @@ import android.util.Log
 
 /**
  * Listens for [android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION]
- * broadcasts and delegates to [SmsEventChannel.sendSmsReceived] which
- * constructs and sends the appropriate payload to the Flutter layer.
+ * broadcasts, extracts sender and timestamp from the first SMS message,
+ * and delegates to [SmsEventChannel.sendSmsReceived] which constructs
+ * and sends the JSON payload to the Flutter layer.
  *
  * This receiver has NO direct communication with Flutter.
  * Its ONLY responsibility is:
  *   1. Receive the SMS intent
- *   2. Call SmsEventChannel.sendSmsReceived()
+ *   2. Extract metadata (sender, timestamp)
+ *   3. Call SmsEventChannel.sendSmsReceived(sender, timestamp)
+ *
+ * SmsReceiver must NEVER serialize JSON.
  */
 class SmsReceiver : BroadcastReceiver() {
 
@@ -40,8 +44,7 @@ class SmsReceiver : BroadcastReceiver() {
                 return
             }
 
-            // Build the first SmsMessage to confirm this is real SMS data
-            // (we still do NOT send the body or sender across the bridge)
+            // Parse PDUs into SmsMessage objects
             val messages = pdus.mapNotNull { pdu ->
                 try {
                     SmsMessage.createFromPdu(pdu as ByteArray)
@@ -56,9 +59,19 @@ class SmsReceiver : BroadcastReceiver() {
                 return
             }
 
-            // At least one valid SMS message confirmed — broadcast the signal
+            // Extract sender, timestamp, and body from the first message
+            val firstMessage = messages.first()
+            val sender = firstMessage.displayOriginatingAddress ?: "unknown"
+            val timestamp = firstMessage.timestampMillis
+            val body = firstMessage.messageBody ?: ""
+
+            Log.d(TAG, "[SMS] Sender extracted: $sender")
+            Log.d(TAG, "[SMS] Timestamp extracted: $timestamp")
+            Log.d(TAG, "[SMS] Body length: ${body.length} chars")
+
+            // Broadcast the metadata to the EventChannel
             Log.d(TAG, "[SMS] Broadcasting Flutter event")
-            SmsEventChannel.sendSmsReceived()
+            SmsEventChannel.sendSmsReceived(sender, timestamp, body)
             Log.d(TAG, "[SMS] Event sent successfully")
 
         } catch (e: Exception) {

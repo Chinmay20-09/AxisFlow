@@ -9,9 +9,10 @@ import org.json.JSONObject
  * Bridges SMS arrival events from the Android native layer to the Flutter
  * [EventChannel] named `"com.example.transaction/sms"`.
  *
- * PHASE 2 payload is a JSON string `{"version": 1, "event": "sms_received"}`
- * designed for forward-compatibility — future phases can extend the JSON
- * object with additional keys without breaking existing consumers.
+ * PHASE 3 payload is a JSON string:
+ * `{"version": 1, "event": "sms_received", "data": {"sender": "...", "timestamp": 1234567890}}`
+ *
+ * SmsEventChannel must NEVER parse SMS — it only builds and sends JSON.
  */
 class SmsEventChannel(private val flutterEngine: FlutterEngine) {
 
@@ -24,10 +25,14 @@ class SmsEventChannel(private val flutterEngine: FlutterEngine) {
 
         /**
          * Called by [SmsReceiver] when an SMS arrives.
-         * Builds a JSON object, serializes it to a string, and sends it
-         * across the EventChannel.
+         * Builds a JSON object with sender, timestamp, and body, serializes
+         * it to a string, and sends it across the EventChannel.
+         *
+         * @param sender The SMS sender address (e.g. "HDFCBK").
+         * @param timestamp Unix epoch millis from the SMS message.
+         * @param body The full SMS message text.
          */
-        fun sendSmsReceived() {
+        fun sendSmsReceived(sender: String, timestamp: Long, body: String) {
             val sink = eventSink
             if (sink == null) {
                 Log.w(TAG, "[SMS][ERROR] EventSink is null")
@@ -36,15 +41,21 @@ class SmsEventChannel(private val flutterEngine: FlutterEngine) {
             try {
                 Log.d(TAG, "[SMS] Creating JSON payload")
 
-                // Future-proof JSON — new keys can be added in later phases
-                // without changing this call site.
+                // Build the data object
+                val data = JSONObject()
+                data.put("sender", sender)
+                data.put("timestamp", timestamp)
+                data.put("body", body)
+
+                // Build the root payload
                 val payload = JSONObject()
                 payload.put("version", 1)
                 payload.put("event", "sms_received")
+                payload.put("data", data)
 
-                val jsonString = payload.toString()
+                val jsonString = payload.toString(2)
 
-                Log.d(TAG, "[SMS] Payload: $jsonString")
+                Log.d(TAG, "[SMS] Payload:\n$jsonString")
 
                 Log.d(TAG, "[SMS] Sending payload")
                 sink.success(jsonString)
