@@ -10,6 +10,7 @@ import 'core/theme/app_theme.dart';
 import 'core/config/supabase_config.dart';
 import 'ui/screens/auth/auth_gate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'automation/sms/sms_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,9 @@ void main() async {
 
   // Init controller
   final controller = TransactionController()..load();
+
+  // PHASE 1 — Start SMS bridge
+  await SmsService().initialize();
 
   runApp(AxisFlowApp(controller: controller));
 }
