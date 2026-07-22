@@ -1,8 +1,15 @@
+// ignore_for_file: avoid_print
+
 import 'package:axisflow/automation/sms/models/sms_event.dart';
+import 'package:axisflow/automation/sms/parser/sms_field_extractor.dart';
 import 'package:axisflow/automation/sms/services/bank_detector.dart';
 import '../models/processing_result.dart';
 
 /// Parsed fields extracted from an SMS body.
+///
+/// This is a pure data class produced by [TransactionParser] and consumed
+/// by [ProcessingResult]. All field extraction logic lives in
+/// [SmsFieldExtractor] — this class only carries data.
 class ParsedTransaction {
   final double? amount;
   final String? merchant;
@@ -19,73 +26,44 @@ class ParsedTransaction {
   });
 }
 
-/// Regex-based SMS transaction parser.
+/// Orchestrates SMS transaction parsing by delegating field extraction
+/// to [SmsFieldExtractor].
 ///
-/// Extracts structured transaction data from Indian bank SMS formats.
-/// Multiple regex patterns are tried for each field to handle the variety
-/// of bank message formats. The parser never crashes — nulls are returned
-/// for any field that cannot be extracted.
+/// **This class no longer contains regex patterns.**
+///
+/// Responsibilities:
+/// 1. Call [SmsFieldExtractor] methods to extract individual fields.
+/// 2. Detect the transaction type (debit/credit/UPI/etc.) via [BankDetector].
+/// 3. Calculate confidence score based on how many fields were extracted.
+/// 4. Build a [ParsedTransaction] and a [ProcessingResult].
+///
+/// See [SmsFieldExtractor] for the centralized field extraction logic.
 class TransactionParser {
-  // ── Amount patterns ──────────────────────────────────────────────────────
-
-  static final _amountPatterns = <RegExp>[
-    // "Rs.250", "Rs 250", "Rs. 250.50", "₹250", "₹ 250"
-    RegExp(r'(?:Rs\.?|₹|INR)\s*([\d,]+(?:\.\d{1,2})?)', caseSensitive: false),
-    // "debited with 250", "credited with 5000"
-    RegExp(r'(?:debited|credited|spent|paid)\s+(?:with|of|is|Rs\.?|₹|INR)?\s*([\d,]+(?:\.\d{1,2})?)', caseSensitive: false),
-    // "amount 250", "amt 250"
-    RegExp(r'(?:amount|amt)\s*(?:is|of|:)?\s*(?:Rs\.?|₹|INR)?\s*([\d,]+(?:\.\d{1,2})?)', caseSensitive: false),
-    // "A/C debited by 250"
-    RegExp(r'(?:A/C|account)\s+(?:debited|credited)\s+by\s*(?:Rs\.?|₹|INR)?\s*([\d,]+(?:\.\d{1,2})?)', caseSensitive: false),
-    // Standalone number after currency context words
-    RegExp(r'(?:of|for|is)\s*(?:Rs\.?|₹|INR)?\s*([\d,]+(?:\.\d{1,2})?)\s*(?:wd|on|at|to|from|in)', caseSensitive: false),
-  ];
-
-  // ── Merchant patterns ────────────────────────────────────────────────────
-
-  static final _merchantPatterns = <RegExp>[
-    // "at AMAZON", "at AMAZON PAY", "at SWIGGY"
-    RegExp(r'(?:at|to|for|towards|via)\s+([A-Z][A-Za-z0-9\s&.-]+?)(?:\s+(?:on|ref|Avl|Bal|Rs|at|from|of)|\.|$)', caseSensitive: false),
-    // "at MERCHANT on date"
-    RegExp(r'(?:at|to)\s+([A-Z][A-Za-z0-9\s&.-]+?)\s+on\s+\d{2}', caseSensitive: false),
-    // "paid to MERCHANT"
-    RegExp(r'paid\s+(?:to|at)\s+([A-Z][A-Za-z0-9\s&.-]+?)(?:\s+(?:on|via|ref|Avl|Bal|Rs|\.)|$)', caseSensitive: false),
-    // "transfer to MERCHANT"
-    RegExp(r'transfer(?:red)?\s+to\s+([A-Z][A-Za-z0-9\s&.-]+?)(?:\s+(?:on|ref|via|Avl|Bal|\.)|$)', caseSensitive: false),
-  ];
-
-  // ── Balance patterns ────────────────────────────────────────────────────
-
-  static final _balancePatterns = <RegExp>[
-    // "Avl Bal Rs.12340", "Avl Bal 12340", "Bal Rs.12340"
-    RegExp(r'(?:Avl|Available)?\s*Bal(?:ance)?\.?\s*(?:Rs\.?|₹|INR)?\s*([\d,]+(?:\.\d{1,2})?)', caseSensitive: false),
-    // "balance is Rs.12340", "balance Rs.12340"
-    RegExp(r'balance\s+(?:is|of|:)?\s*(?:Rs\.?|₹|INR)?\s*([\d,]+(?:\.\d{1,2})?)', caseSensitive: false),
-  ];
-
-  // ── Reference number patterns ────────────────────────────────────────────
-
-  static final _referencePatterns = <RegExp>[
-    // "ref: ABC123", "Ref No 123ABC", "UTR 123456789"
-    RegExp(r'(?:ref|Ref|Trxn|Txn|UTR|UTR\s*No|Ref\s*No)[^A-Za-z0-9]*([A-Za-z0-9]{6,})'),
-    // Standalone 8+ char alphanumeric appearing after "ref" context
-    RegExp(r'(?:reference|ref\.?|transaction\s*id|txn\s*id)\s*(?:is|:)?\s*([A-Za-z0-9]{6,})', caseSensitive: false),
-  ];
-
   /// Parse an SMS body and extract structured transaction data.
   ///
+  /// Delegates all field extraction to [SmsFieldExtractor].
   /// Returns a [ParsedTransaction] with null for any unavailable field.
   /// Never throws.
   static ParsedTransaction parseBody(String body) {
-    if (body.isEmpty) return ParsedTransaction();
+    if (body.isEmpty) {
+      print('[TRACE] parseBody: body is empty');
+      return ParsedTransaction();
+    }
+    print('[TRACE] parseBody: body length=${body.length},'
+        ' first 60 chars="${body.length > 60 ? body.substring(0, 60) : body}"');
 
-    final amount = _extractAmount(body);
-    final merchant = _extractMerchant(body);
-    final balance = _extractBalance(body);
-    final refNumber = _extractReferenceNumber(body);
+    // All extraction delegated to SmsFieldExtractor (single source of truth)
+    final amount = SmsFieldExtractor.extractAmount(body);
+    final merchant = SmsFieldExtractor.extractMerchant(body);
+    final balance = SmsFieldExtractor.extractBalance(body);
+    final refNumber = SmsFieldExtractor.extractReferenceNumber(body);
+
+    print('[TRACE] parseBody result: amount=$amount,'
+        ' merchant=$merchant, balance=$balance, ref=$refNumber');
 
     // Determine transaction type from body keywords
     final txType = BankDetector.detectTransactionType(body);
+    print('[TRACE] parseBody: detected txType=${txType.name}');
 
     return ParsedTransaction(
       amount: amount,
@@ -98,17 +76,24 @@ class TransactionParser {
 
   /// Full pipeline: parse an [SmsEvent] into a [ProcessingResult].
   static ProcessingResult processEvent(SmsEvent event) {
+    print('[TRACE] processEvent: sender=${event.sender}, body.length=${event.body.length}');
+
     final parsed = parseBody(event.body);
     final bankResult = BankDetector.detectFromSenderOrBody(
       event.sender,
       event.body,
     );
+    print('[TRACE] processEvent: bankResult=${bankResult.displayName}'
+        ' (${bankResult.confidence})');
 
     final isTransaction = parsed.amount != null ||
         bankResult.displayName != 'UNKNOWN' ||
         parsed.merchant != null;
+    print('[TRACE] processEvent: isTransaction=$isTransaction'
+        ' (amount!=null=${parsed.amount != null},'
+        ' bank!=UNKNOWN=${bankResult.displayName != 'UNKNOWN'},'
+        ' merchant!=null=${parsed.merchant != null})');
 
-    // Calculate confidence based on extracted fields
     final confidence = _calculateConfidence(
       isTransaction: isTransaction,
       hasAmount: parsed.amount != null,
@@ -131,55 +116,7 @@ class TransactionParser {
     );
   }
 
-  // ── Private helpers ─────────────────────────────────────────────────────
-
-  static double? _extractAmount(String body) {
-    for (final pattern in _amountPatterns) {
-      final match = pattern.firstMatch(body);
-      if (match != null) {
-        final cleaned = match.group(1)!.replaceAll(',', '');
-        final value = double.tryParse(cleaned);
-        if (value != null && value > 0) return value;
-      }
-    }
-    return null;
-  }
-
-  static String? _extractMerchant(String body) {
-    for (final pattern in _merchantPatterns) {
-      final match = pattern.firstMatch(body);
-      if (match != null) {
-        final merchant = match.group(1)!.trim();
-        if (merchant.length >= 2 && merchant.length <= 50) {
-          return merchant;
-        }
-      }
-    }
-    return null;
-  }
-
-  static double? _extractBalance(String body) {
-    for (final pattern in _balancePatterns) {
-      final match = pattern.firstMatch(body);
-      if (match != null) {
-        final cleaned = match.group(1)!.replaceAll(',', '');
-        final value = double.tryParse(cleaned);
-        if (value != null && value >= 0) return value;
-      }
-    }
-    return null;
-  }
-
-  static String? _extractReferenceNumber(String body) {
-    for (final pattern in _referencePatterns) {
-      final match = pattern.firstMatch(body);
-      if (match != null) {
-        final ref = match.group(1)!.trim();
-        if (ref.length >= 6) return ref;
-      }
-    }
-    return null;
-  }
+  // ── Confidence calculation ──────────────────────────────────────────────
 
   static double _calculateConfidence({
     required bool isTransaction,

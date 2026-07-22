@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:math';
 import 'package:axisflow/data/models/transaction_model.dart';
 import '../models/processing_result.dart';
@@ -19,14 +21,21 @@ class TransactionMapper {
   /// Returns `null` if the result is not a valid transaction
   /// (e.g. no amount detected).
   static Transaction? toTransaction(ProcessingResult result) {
-    if (!result.isTransaction) return null;
-    if (result.amount == null || result.amount! <= 0) return null;
+    if (!result.isTransaction) {
+      print('[TRACE] toTransaction: SKIP — isTransaction=false');
+      return null;
+    }
+    if (result.amount == null || result.amount! <= 0) {
+      print('[TRACE] toTransaction: SKIP — amount=${result.amount} (null or <=0)');
+      return null;
+    }
 
     final now = DateTime.now();
     final timestamp = result.timestamp > 0
         ? DateTime.fromMillisecondsSinceEpoch(result.timestamp)
         : now;
 
+    print('[TRACE] toTransaction: ✓ mapping to Transaction (amount=${result.amount}, timestamp=$timestamp)');
     return Transaction(
       id: 'sms_${timestamp.millisecondsSinceEpoch}_${Random().nextInt(99999)}',
       amount: result.amount!,

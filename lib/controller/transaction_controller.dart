@@ -1,4 +1,6 @@
 // lib/controller/transaction_controller.dart
+// ignore_for_file: avoid_print
+
 import 'package:flutter/foundation.dart';
 import '../data/services/analytics_service.dart';
 import '../data/local/transaction_db.dart';
@@ -17,11 +19,15 @@ class TransactionController extends ChangeNotifier {
   List<Transaction> get transactions => _transactions;
 
   void load() {
+    print('[TRACE] TransactionController.load() — fetching from Hive...');
     _transactions = TransactionDB.getAll();
+    print('[TRACE] TransactionController.load() — loaded ${_transactions.length} transactions');
     notifyListeners();
+    print('[TRACE] TransactionController.load() — notified listeners');
   }
 
   Future<void> add(Transaction t) async {
+    print('[TRACE] TransactionController.add(${t.id})...');
     await TransactionDB.add(t);
     load();
   }

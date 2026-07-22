@@ -70,8 +70,11 @@ class SmsReceiver : BroadcastReceiver() {
             Log.d(TAG, "[SMS] Body length: ${body.length} chars")
 
             // Broadcast the metadata to the EventChannel
+            Log.d(TAG, "[TRACE] SmsReceiver.onReceive() — sender=$sender, timestamp=$timestamp, body.length=${body.length}")
             Log.d(TAG, "[SMS] Broadcasting Flutter event")
+            Log.d(TAG, "[TRACE] >>> SmsEventChannel.sendSmsReceived(sender, timestamp, body)...")
             SmsEventChannel.sendSmsReceived(sender, timestamp, body)
+            Log.d(TAG, "[TRACE] <<< SmsEventChannel.sendSmsReceived() returned")
             Log.d(TAG, "[SMS] Event sent successfully")
 
         } catch (e: Exception) {
