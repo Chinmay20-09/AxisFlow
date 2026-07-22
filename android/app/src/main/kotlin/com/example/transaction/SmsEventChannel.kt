@@ -3,13 +3,15 @@ package com.example.transaction
 import android.util.Log
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
+import org.json.JSONObject
 
 /**
  * Bridges SMS arrival events from the Android native layer to the Flutter
  * [EventChannel] named `"com.example.transaction/sms"`.
  *
- * This is PHASE 1 only — only the string `"SMS_RECEIVED"` is sent across
- * the bridge. No message body, sender, or metadata is transmitted.
+ * PHASE 2 payload is a JSON string `{"version": 1, "event": "sms_received"}`
+ * designed for forward-compatibility — future phases can extend the JSON
+ * object with additional keys without breaking existing consumers.
  */
 class SmsEventChannel(private val flutterEngine: FlutterEngine) {
 
@@ -22,7 +24,8 @@ class SmsEventChannel(private val flutterEngine: FlutterEngine) {
 
         /**
          * Called by [SmsReceiver] when an SMS arrives.
-         * Forwards the "SMS_RECEIVED" signal to the Flutter layer.
+         * Builds a JSON object, serializes it to a string, and sends it
+         * across the EventChannel.
          */
         fun sendSmsReceived() {
             val sink = eventSink
@@ -31,7 +34,20 @@ class SmsEventChannel(private val flutterEngine: FlutterEngine) {
                 return
             }
             try {
-                sink.success("SMS_RECEIVED")
+                Log.d(TAG, "[SMS] Creating JSON payload")
+
+                // Future-proof JSON — new keys can be added in later phases
+                // without changing this call site.
+                val payload = JSONObject()
+                payload.put("version", 1)
+                payload.put("event", "sms_received")
+
+                val jsonString = payload.toString()
+
+                Log.d(TAG, "[SMS] Payload: $jsonString")
+
+                Log.d(TAG, "[SMS] Sending payload")
+                sink.success(jsonString)
             } catch (e: Exception) {
                 Log.e(TAG, "[SMS][ERROR] Failed to send event: ${e.message}", e)
             }

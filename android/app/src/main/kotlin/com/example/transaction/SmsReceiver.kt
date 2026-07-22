@@ -9,11 +9,13 @@ import android.util.Log
 
 /**
  * Listens for [android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION]
- * broadcasts and forwards a simple "SMS_RECEIVED" signal to the Flutter
- * layer via [SmsEventChannel].
+ * broadcasts and delegates to [SmsEventChannel.sendSmsReceived] which
+ * constructs and sends the appropriate payload to the Flutter layer.
  *
- * This is PHASE 1 only — NO body, NO sender, NO timestamp is transmitted
- * to Flutter. Only the string "SMS_RECEIVED" is sent.
+ * This receiver has NO direct communication with Flutter.
+ * Its ONLY responsibility is:
+ *   1. Receive the SMS intent
+ *   2. Call SmsEventChannel.sendSmsReceived()
  */
 class SmsReceiver : BroadcastReceiver() {
 
