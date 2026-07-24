@@ -46,6 +46,40 @@ class PopupAddTransaction extends StatefulWidget {
     this.onDismissed,
   });
 
+  /// Construct from a raw [Transaction] (e.g. from the Alerts screen).
+  ///
+  /// Parses merchant, bank, and sender from the structured note field.
+  factory PopupAddTransaction.fromTransaction(
+    Transaction tx, {
+    VoidCallback? onDismissed,
+    ValueChanged<TransactionResultData>? onDone,
+  }) {
+    String extractField(String prefix) {
+      for (final line in tx.note.split('\n')) {
+        if (line.startsWith('$prefix: ')) {
+          return line.substring('$prefix: '.length).trim();
+        }
+      }
+      return '';
+    }
+    final merchant = extractField('Merchant');
+    final bank = extractField('Bank');
+
+    return PopupAddTransaction(
+      transactionId: tx.id,
+      amount: tx.amount,
+      merchant: merchant.isNotEmpty ? merchant : 'Unknown',
+      account: bank.isNotEmpty ? bank : 'Manual Entry',
+      bank: bank,
+      date: tx.createdAt,
+      suggestedCategory: tx.category,
+      needsAttention: tx.state == TransactionState.pending,
+      transactionType: tx.type,
+      onDone: onDone,
+      onDismissed: onDismissed,
+    );
+  }
+
   /// Construct from [TransactionSavedData].
   factory PopupAddTransaction.fromSavedData(
     TransactionSavedData data, {

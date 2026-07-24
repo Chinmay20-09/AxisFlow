@@ -11,8 +11,6 @@ import 'controller/transaction_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/supabase_config.dart';
 import 'ui/screens/auth/auth_gate.dart';
-import 'data/models/transaction_model.dart';
-import 'ui/screens/popup_add_transaction.dart';
 import 'automation/sms/sms_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -76,56 +74,32 @@ void main() async {
   final smsService = SmsService();
   smsService.setController(controller);
 
-  // Wire up the bottom sheet to appear after a successful auto-save.
-  smsService.onTransactionSaved = (data) {
-    final context = navigatorKey.currentContext;
-    if (context == null) {
-      print('[SMS] Cannot show sheet — navigator context is null (app likely backgrounded)');
-      return;
-    }
-    // Use smsService's own sheet-queue mechanism for stack prevention
-    smsService.showSheetForTransaction(data);
-  };
-
-  // Wire up the actual sheet presentation using the navigator key.
-  // When Done is pressed, update the transaction in Hive with the
-  // user-confirmed category and note, then clear Needs Attention.
-  smsService.onSheetReadyToShow = (data, onDismiss) {
-    final context = navigatorKey.currentContext;
-    if (context == null) {
-      print('[SMS] Cannot show sheet — navigator context is null');
-      onDismiss(); // release the queue slot
-      return;
-    }
-
-    // Build a sheet with onDone wired to update the persisted transaction.
-    final sheet = PopupAddTransaction.fromSavedData(
-      data,
-      onDismissed: onDismiss,
-      onDone: (result) async {
-        try {
-          final tx = TransactionDB.get(result.transactionId);
-          if (tx == null) {
-            print('[SMS] Cannot update transaction ${result.transactionId} — not found in Hive');
-            return;
-          }
-          tx.category = result.selectedCategory;
-          tx.note = result.note;
-          tx.state = TransactionState.completed;
-          await TransactionDB.update(tx);
-          controller.load();
-          print('[SMS] Transaction ${result.transactionId} updated: category=${result.selectedCategory}');
-        } catch (e) {
-          print('[SMS] Failed to update transaction ${result.transactionId}: $e');
-        }
-      },
-    );
-    PopupAddTransaction.show(context, sheet: sheet);
+  // Wire up app-resume sync: scan inbox for missed SMS when app
+  // returns from background.
+  smsService.onResume = () {
+    controller.smsSyncService.sync().then((result) {
+      if (result.hasNewData) {
+        print('[SMS] Resume sync complete: $result');
+        controller.load();
+      }
+    });
   };
 
   print('[TRACE] smsService.initialize()...');
   await smsService.initialize();
   print('[TRACE] smsService.initialize() ✓');
+
+  // ── Automatic SMS sync on launch ─────────────────────────────────────
+  // Pre-populate in-memory history for duplicate detection, then scan
+  // the device inbox for any missed SMS since the last sync timestamp.
+  // This runs fire-and-forget so it doesn't block app startup.
+  print('[TRACE] SmsSyncService.prePopulateHistory()...');
+  await controller.smsSyncService.prePopulateHistory();
+  print('[TRACE] SmsSyncService.prePopulateHistory() ✓');
+  controller.smsSyncService.sync().then((result) {
+    print('[TRACE] Initial SMS sync complete: $result');
+    controller.load();
+  });
 
   print('[TRACE] runApp()...');
   runApp(AxisFlowApp(controller: controller));

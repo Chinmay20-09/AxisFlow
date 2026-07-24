@@ -102,7 +102,7 @@ class _AppDrawerState extends State<AppDrawer>
       _NavItem(
         Icons.notifications_rounded,
         'Alerts',
-        badge: '3',
+        // Badge is computed dynamically in _AnimatedNavTile
         screen: AlertsScreen(controller: widget.controller),
       ),
       _NavItem(
@@ -231,12 +231,14 @@ class _AppDrawerState extends State<AppDrawer>
 
             ...List.generate(_secondaryItems.length, (i) {
               final globalIdx = _mainItems.length + i;
+              final isAlerts = _secondaryItems[i].label == 'Alerts';
               return _AnimatedNavTile(
                 item: _secondaryItems[i],
                 index: globalIdx,
                 selected: _selected == globalIdx,
                 fade: _fadeAnims[globalIdx],
                 slide: _slideAnims[globalIdx],
+                controller: isAlerts ? widget.controller : null,
                 onTap: () {
                   setState(() => _selected = globalIdx);
 
@@ -369,6 +371,7 @@ class _AnimatedNavTile extends StatefulWidget {
   final Animation<double> fade;
   final Animation<Offset> slide;
   final VoidCallback onTap;
+  final TransactionController? controller;
 
   const _AnimatedNavTile({
     required this.item,
@@ -377,6 +380,7 @@ class _AnimatedNavTile extends StatefulWidget {
     required this.fade,
     required this.slide,
     required this.onTap,
+    this.controller,
   });
 
   @override
@@ -385,6 +389,18 @@ class _AnimatedNavTile extends StatefulWidget {
 
 class _AnimatedNavTileState extends State<_AnimatedNavTile> {
   bool _hovered = false;
+
+  /// Computes the badge dynamically:
+  /// - If [widget.item.badge] is set, uses that static value.
+  /// - If [widget.controller] is provided (Alerts item), shows pending count.
+  String? get _badge {
+    if (widget.controller != null) {
+      final count = widget.controller!.pendingTransactions.length;
+      if (count > 0) return count.toString();
+      return null;
+    }
+    return widget.item.badge;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -445,8 +461,8 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                         ),
                       ),
                     ),
-                    // Badge (optional)
-                    if (widget.item.badge != null)
+                    // Badge (optional or dynamic from controller)
+                    if (_badge != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 7,
@@ -461,7 +477,7 @@ class _AnimatedNavTileState extends State<_AnimatedNavTile> {
                           ),
                         ),
                         child: Text(
-                          widget.item.badge!,
+                          _badge!,
                           style: const TextStyle(
                             color: AppColors.accentRed,
                             fontSize: 10,

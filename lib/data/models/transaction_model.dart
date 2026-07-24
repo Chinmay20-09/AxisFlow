@@ -49,6 +49,7 @@ class Transaction extends HiveObject {
 
     return DateTime.now().difference(createdAt).inMinutes < 60;
   }
+  
 
   String get typeLabel {
     switch (type) {
@@ -71,4 +72,7 @@ enum TransactionState {
   pending,
   @HiveField(2)
   forfeited,
+}
+class TransactionStateHelper {
+  static const defaultImportedState = TransactionState.pending;
 }

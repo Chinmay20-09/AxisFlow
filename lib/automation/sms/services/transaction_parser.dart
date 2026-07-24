@@ -52,18 +52,27 @@ class TransactionParser {
     print('[TRACE] parseBody: body length=${body.length},'
         ' first 60 chars="${body.length > 60 ? body.substring(0, 60) : body}"');
 
-    // All extraction delegated to SmsFieldExtractor (single source of truth)
-    final amount = SmsFieldExtractor.extractAmount(body);
+    // ── Step 1: Detect transaction type FIRST ────────────────────────────
+    // This tells the extractor whether the SMS is a credit (income)
+    // or debit (expense), so subsequent extraction can prefer patterns
+    // matching the known direction of money flow.
+    final txType = SmsFieldExtractor.detectTransactionType(body);
+    print('[TRACE] parseBody: detected txType=${txType.name}');
+
+    // ── Step 2: Field extraction (type-aware) ────────────────────────────
+    // Amount extraction receives the transaction type so it can prioritise
+    // "credited by" patterns when the type is credit, and "debited by"
+    // patterns when the type is debit.
+    final amount = SmsFieldExtractor.extractAmount(
+      body,
+      transactionType: txType,
+    );
     final merchant = SmsFieldExtractor.extractMerchant(body);
     final balance = SmsFieldExtractor.extractBalance(body);
     final refNumber = SmsFieldExtractor.extractReferenceNumber(body);
 
     print('[TRACE] parseBody result: amount=$amount,'
         ' merchant=$merchant, balance=$balance, ref=$refNumber');
-
-    // Determine transaction type from body keywords
-    final txType = BankDetector.detectTransactionType(body);
-    print('[TRACE] parseBody: detected txType=${txType.name}');
 
     return ParsedTransaction(
       amount: amount,

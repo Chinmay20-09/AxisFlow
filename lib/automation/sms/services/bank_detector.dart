@@ -1,4 +1,5 @@
 import '../models/processing_result.dart';
+import '../parser/sms_field_extractor.dart';
 
 /// Identifies financial institutions and payment apps from SMS sender names.
 ///
@@ -110,41 +111,10 @@ class BankDetector {
   }
 
   /// Transaction type detection based on body content keywords.
+  ///
+  /// Delegates to [SmsFieldExtractor.detectTransactionType] — the single
+  /// source of truth for body-based transaction type detection.
   static BankTransactionType detectTransactionType(String body) {
-    final upper = body.toUpperCase();
-
-    if (upper.contains('UPI')) return BankTransactionType.upi;
-    if (upper.contains('IMPS')) return BankTransactionType.imps;
-    if (upper.contains('NEFT')) return BankTransactionType.neft;
-    if (upper.contains('RTGS')) return BankTransactionType.rtgs;
-    if (upper.contains('ATM') ||
-        upper.contains('WITHDRAW') ||
-        upper.contains('CASH')) {
-      return BankTransactionType.atm;
-    }
-    if (upper.contains('CARD') ||
-        upper.contains('POS') ||
-        upper.contains('SWIPE') ||
-        upper.contains('TAP')) {
-      return BankTransactionType.card;
-    }
-    if (upper.contains('WALLET') || upper.contains('PAYTM')) {
-      return BankTransactionType.wallet;
-    }
-    if (upper.contains('DEBIT') ||
-        upper.contains('DEBITED') ||
-        upper.contains('SPENT') ||
-        upper.contains('PAID') ||
-        upper.contains('TRANSFER')) {
-      return BankTransactionType.debit;
-    }
-    if (upper.contains('CREDIT') ||
-        upper.contains('CREDITED') ||
-        upper.contains('RECEIVED') ||
-        upper.contains('DEPOSIT')) {
-      return BankTransactionType.credit;
-    }
-
-    return BankTransactionType.unknown;
+    return SmsFieldExtractor.detectTransactionType(body);
   }
 }

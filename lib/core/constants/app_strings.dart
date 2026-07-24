@@ -86,7 +86,7 @@ String formatTime(DateTime dt) {
 
 const String supportScreenTitle = 'Support & Development';
 
-const String currencySymbol = '\$';
+const String currencySymbol = '₹';
 
 const String supportIntro =
     'AxisFlow is free and always will be.'

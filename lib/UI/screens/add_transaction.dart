@@ -7,6 +7,7 @@ import 'package:axisflow/data/models/transaction_model.dart';
 import 'package:axisflow/core/error_handler.dart';
 import 'package:axisflow/ui/screens/categories.dart';
 import 'package:axisflow/ui/widgets/cards/category_selector.dart';
+import 'package:axisflow/core/theme/app_colors.dart';
 
 
 /// Lightweight replacement for the old AddTransactionSheet.
@@ -250,11 +251,18 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _canSave ? _save : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                  ),
                   child: _saving
                       ? const SizedBox(
                           height: 16,
                           width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : Text(isEdit ? 'UPDATE TRANSACTION' : 'ADD TRANSACTION'),
                 ),

@@ -11,7 +11,6 @@ import 'services/duplicate_detector.dart';
 import 'services/transaction_mapper.dart';
 import 'package:axisflow/data/local/transaction_db.dart';
 import 'package:axisflow/data/models/transaction_model.dart';
-import 'package:axisflow/ui/models/transaction_saved_data.dart';
 import 'package:axisflow/controller/transaction_controller.dart';
 
 /// PHASE 8 — Full automatic transaction pipeline with Hive persistence.
@@ -39,17 +38,20 @@ class SmsService with WidgetsBindingObserver {
   /// The controller used to refresh the UI after saving.
   TransactionController? _controller;
 
-  /// Whether a bottom sheet is currently showing (prevents stacking).
-  bool _isSheetShowing = false;
-
-  /// Queue of pending sheet data — shown one at a time after the current
-  /// sheet is dismissed. Bounded at 20 to prevent unbounded growth.
-  final List<TransactionSavedData> _pendingSheets = [];
-  static const int _maxPendingSheets = 20;
-
   /// Whether the app is currently in the foreground.
-  /// Used to decide whether to show the bottom sheet immediately or skip.
   bool _isInForeground = true;
+
+  /// Guards against concurrent SMS event processing.
+  ///
+  /// The event channel callback is `async`, so two events can interleave
+  /// when the first one suspends at `await _autoSaveTransaction()`.
+  /// This causes a race where the second event doesn't see the first
+  /// event's transaction in the DB or in-memory history, leading to
+  /// duplicate saves and duplicate popups.
+  ///
+  /// When `true`, the event is silently skipped — it's almost certainly
+  /// a duplicate Android broadcast of the same SMS.
+  bool _isProcessing = false;
 
   /// Set the controller to enable automatic dashboard refresh on save.
   void setController(TransactionController controller) {
@@ -60,10 +62,9 @@ class SmsService with WidgetsBindingObserver {
   /// Set this to receive processing results.
   void Function(ProcessingResult result)? onProcessed;
 
-  /// Callback invoked when a transaction is successfully saved to the DB.
-  /// Provides structured data for showing the bottom sheet.
-  /// Only fires when: isTransaction && !duplicate && save succeeded.
-  void Function(TransactionSavedData data)? onTransactionSaved;
+  /// Callback invoked when the app returns from background.
+  /// Used by main.dart to trigger SMS sync on app resume.
+  VoidCallback? onResume;
 
   /// Register this service as a lifecycle observer to track foreground state.
   void _registerLifecycle() {
@@ -72,8 +73,15 @@ class SmsService with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final wasInForeground = _isInForeground;
     _isInForeground = state == AppLifecycleState.resumed;
     print('[TRACE] SmsService lifecycle: state=$state, isInForeground=$_isInForeground');
+
+    // Trigger sync when app returns to foreground (was backgrounded).
+    if (!wasInForeground && _isInForeground) {
+      print('[SMS] App resumed from background — triggering SMS sync');
+      onResume?.call();
+    }
   }
 
   /// Start listening to native SMS events.
@@ -111,90 +119,107 @@ class SmsService with WidgetsBindingObserver {
     _channel.receiveBroadcastStream().listen(
       (event) async {
         print('[TRACE] ===== EVENT CHANNEL CALLBACK FIRED =====');
-        print('[TRACE] event runtimeType=${event.runtimeType}');
-        print('[TRACE] event value (first 120 chars): ${event.toString().length > 120 ? '${event.toString().substring(0, 120)}...' : event.toString()}');
-        print('[SMS] Raw payload received');
 
-        // Step 1: Decode and create SmsEvent
-        print('[TRACE] >>> _decodePayload()...');
-        final decoded = _decodePayload(event);
-        print('[TRACE] <<< _decodePayload() → ${decoded == null ? 'NULL' : 'OK'}');
-        if (decoded == null) return;
-
-        print('[TRACE] >>> _validatePayload()...');
-        final valid = _validatePayload(decoded);
-        print('[TRACE] <<< _validatePayload() → $valid');
-        if (!valid) return;
-
-        print('[SMS] Payload validated');
-
-        print('[TRACE] >>> SmsEvent.fromJson()...');
-        final smsEvent = SmsEvent.fromJson(decoded);
-        print('[TRACE] <<< SmsEvent.fromJson() ✓');
-        print('[SMS] Event: sender=${smsEvent.sender}, '
-            'body="${smsEvent.body.length > 60 ? '${smsEvent.body.substring(0, 60)}...' : smsEvent.body}"');
-
-        // Step 2: Detect bank
-        print('[TRACE] >>> BankDetector.detect(${smsEvent.sender})...');
-        final bankResult = BankDetector.detect(smsEvent.sender);
-        print('[TRACE] <<< BankDetector.detect() → ${bankResult.displayName} (${bankResult.confidence})');
-        print('[Bank] Detected: ${bankResult.displayName} '
-            '(confidence: ${bankResult.confidence.toStringAsFixed(2)})');
-
-        // Step 3: Build ProcessingResult (uses SmsFieldExtractor internally)
-        print('[TRACE] >>> TransactionParser.processEvent()...');
-        final result = TransactionParser.processEvent(smsEvent);
-        print('[TRACE] <<< TransactionParser.processEvent() → isTransaction=${result.isTransaction}, amount=${result.amount}');
-        print('[Processing] Result: '
-            'isTransaction=${result.isTransaction}, '
-            'bank=${result.bank}, '
-            'amount=${result.amount}, '
-            'merchant=${result.merchant}, '
-            'balance=${result.balance}, '
-            'type=${result.transactionType.name}, '
-            'confidence=${result.confidence.toStringAsFixed(2)}');
-
-        // Step 4: Check for duplicates — first in-memory (fast path),
-        // then database (persistent source of truth).
-        final hash = result.hashCode;
-        print('[TRACE] >>> DuplicateDetector.isDuplicate() (hash=$hash)...');
-        final isDupInMemory = DuplicateDetector.isDuplicate(result, _resultHistory);
-        print('[TRACE] <<< DuplicateDetector.isDuplicate() → $isDupInMemory (history size: ${_resultHistory.length})');
-
-        // Step 4b: Database-level duplicate check before saving.
-        // This catches duplicates across app restarts or if in-memory history
-        // is somehow incomplete.
-        print('[TRACE] >>> DuplicateDetector.existsInDatabase()...');
-        final existingTxns = TransactionDB.getAll();
-        final isDupInDb = DuplicateDetector.existsInDatabase(result, existingTxns);
-        print('[TRACE] <<< DuplicateDetector.existsInDatabase() → $isDupInDb');
-
-        final isDup = isDupInMemory || isDupInDb;
-        if (isDup) {
-          print('[Duplicate] Potential duplicate detected — skipping (memory=$isDupInMemory, db=$isDupInDb)');
+        // ── Processing guard: skip if another event is currently ──────
+        // being processed. This prevents the async interleaving race
+        // where two events for the same SMS both pass duplicate detection
+        // because neither sees the other's saved transaction yet.
+        if (_isProcessing) {
+          print('[SMS] Already processing an SMS event — skipping (likely duplicate broadcast)');
+          return;
         }
+        _isProcessing = true;
+        try {
+          print('[TRACE] event runtimeType=${event.runtimeType}');
+          print('[TRACE] event value (first 120 chars): ${event.toString().length > 120 ? '${event.toString().substring(0, 120)}...' : event.toString()}');
+          print('[SMS] Raw payload received');
 
-        // Step 5: Auto-save if valid transaction and not duplicate
-        print('[TRACE] >>> Decision: isTransaction=${result.isTransaction} && !isDup=${!isDup}');
-        if (result.isTransaction && !isDup) {
-          print('[TRACE] >>> _autoSaveTransaction()...');
-          await _autoSaveTransaction(result);
-          print('[TRACE] <<< _autoSaveTransaction() ✓');
-        } else if (!result.isTransaction) {
-          print('[Storage] Skipping — not a transaction');
-        } else if (isDup) {
-          print('[Storage] Skipping — duplicate');
+          // Step 1: Decode and create SmsEvent
+          print('[TRACE] >>> _decodePayload()...');
+          final decoded = _decodePayload(event);
+          print('[TRACE] <<< _decodePayload() → ${decoded == null ? 'NULL' : 'OK'}');
+          if (decoded == null) return;
+
+          print('[TRACE] >>> _validatePayload()...');
+          final valid = _validatePayload(decoded);
+          print('[TRACE] <<< _validatePayload() → $valid');
+          if (!valid) return;
+
+          print('[SMS] Payload validated');
+
+          print('[TRACE] >>> SmsEvent.fromJson()...');
+          final smsEvent = SmsEvent.fromJson(decoded);
+          print('[TRACE] <<< SmsEvent.fromJson() ✓');
+          print('[SMS] Event: sender=${smsEvent.sender}, '
+              'body="${smsEvent.body.length > 60 ? '${smsEvent.body.substring(0, 60)}...' : smsEvent.body}"');
+
+          // Step 2: Detect bank
+          print('[TRACE] >>> BankDetector.detect(${smsEvent.sender})...');
+          final bankResult = BankDetector.detect(smsEvent.sender);
+          print('[TRACE] <<< BankDetector.detect() → ${bankResult.displayName} (${bankResult.confidence})');
+          print('[Bank] Detected: ${bankResult.displayName} '
+              '(confidence: ${bankResult.confidence.toStringAsFixed(2)})');
+
+          // Step 3: Build ProcessingResult (uses SmsFieldExtractor internally)
+          print('[TRACE] >>> TransactionParser.processEvent()...');
+          final result = TransactionParser.processEvent(smsEvent);
+          print('[TRACE] <<< TransactionParser.processEvent() → isTransaction=${result.isTransaction}, amount=${result.amount}');
+          print('[Processing] Result: '
+              'isTransaction=${result.isTransaction}, '
+              'bank=${result.bank}, '
+              'amount=${result.amount}, '
+              'merchant=${result.merchant}, '
+              'balance=${result.balance}, '
+              'type=${result.transactionType.name}, '
+              'confidence=${result.confidence.toStringAsFixed(2)}');
+
+          // Step 4: Check for duplicates — first in-memory (fast path),
+          // then database (persistent source of truth).
+          final hash = result.hashCode;
+          print('[TRACE] >>> DuplicateDetector.isDuplicate() (hash=$hash)...');
+          final isDupInMemory = DuplicateDetector.isDuplicate(result, _resultHistory);
+          print('[TRACE] <<< DuplicateDetector.isDuplicate() → $isDupInMemory (history size: ${_resultHistory.length})');
+
+          // Step 4b: Database-level duplicate check before saving.
+          // This catches duplicates across app restarts or if in-memory history
+          // is somehow incomplete.
+          print('[TRACE] >>> DuplicateDetector.existsInDatabase()...');
+          final existingTxns = TransactionDB.getAll();
+          final isDupInDb = DuplicateDetector.existsInDatabase(result, existingTxns);
+          print('[TRACE] <<< DuplicateDetector.existsInDatabase() → $isDupInDb');
+
+          final isDup = isDupInMemory || isDupInDb;
+          if (isDup) {
+            print('[Duplicate] Potential duplicate detected — skipping (memory=$isDupInMemory, db=$isDupInDb)');
+          }
+
+          // Step 5: Auto-save if valid transaction and not duplicate
+          print('[TRACE] >>> Decision: isTransaction=${result.isTransaction} && !isDup=${!isDup}');
+          if (result.isTransaction && !isDup) {
+            print('[TRACE] >>> _autoSaveTransaction()...');
+            await _autoSaveTransaction(result);
+            print('[TRACE] <<< _autoSaveTransaction() ✓');
+          } else if (!result.isTransaction) {
+            print('[Storage] Skipping — not a transaction');
+          } else if (isDup) {
+            print('[Storage] Skipping — duplicate');
+          }
+
+          // Add result to history (even duplicates — for future comparison)
+          _resultHistory.add(result);
+          // Keep history bounded
+          if (_resultHistory.length > 200) {
+            _resultHistory.removeAt(0);
+          }
+
+          // Notify listener
+          onProcessed?.call(result);
+        } finally {
+          // Release processing guard — ALWAYS, even on early returns
+          // or exceptions. This prevents permanently blocking SMS
+          // processing if a payload validation fails or an error occurs.
+          _isProcessing = false;
         }
-
-        // Add result to history (even duplicates — for future comparison)
-        _resultHistory.add(result);
-        // Keep history bounded
-        if (_resultHistory.length > 200) {
-          _resultHistory.removeAt(0);
-        }
-
-        // Notify listener
-        onProcessed?.call(result);
       },
       onError: (error) {
         print('[SMS][ERROR] Stream error: $error');
@@ -252,26 +277,9 @@ class SmsService with WidgetsBindingObserver {
     print('[TRACE] <<< _controller?.load() ✓');
     print('[Dashboard] Controller notified — dashboard will refresh');
 
-    // Notify the app that a new transaction was saved (for bottom sheet)
-    onTransactionSaved?.call(TransactionSavedData(
-      transactionId: transaction.id,
-      amount: transaction.amount,
-      merchant: _extractMerchantFromNote(transaction.note),
-      bank: _extractBankFromNote(transaction.note),
-      account: _buildAccountLabel(result),
-      date: transaction.createdAt,
-      suggestedCategory: transaction.category,
-      needsAttention: transaction.state == TransactionState.pending,
-      transactionType: transaction.type,
-    ));
-  }
-
-  /// Build an account label from the processing result.
-  String _buildAccountLabel(ProcessingResult result) {
-    if (result.bank != null && result.bank!.isNotEmpty) {
-      return result.bank!;
-    }
-    return 'Bank Account';
+    // Transaction is now visible in the Alerts screen via the controller.
+    // The user can review it at their own pace by tapping "Review" on the
+    // pending transaction card. No popup is shown automatically.
   }
 
   /// Extract merchant from transaction note ("Merchant: ...").
@@ -333,47 +341,8 @@ class SmsService with WidgetsBindingObserver {
     return null;
   }
 
-  /// Show the bottom sheet for a saved transaction, or queue it if
-  /// another sheet is already showing or app is backgrounded.
-  void showSheetForTransaction(TransactionSavedData data) {
-    // Do NOT show sheet when app is backgrounded.
-    if (!_isInForeground) {
-      print('[SMS] App is backgrounded — not showing sheet for transaction ${data.transactionId}');
-      return;
-    }
-
-    if (_isSheetShowing) {
-      // Queue — will show after current sheet is dismissed.
-      // Cap the queue to prevent unbounded growth.
-      if (_pendingSheets.length >= _maxPendingSheets) {
-        print('[SMS] Sheet queue full — dropping oldest queued sheet');
-        _pendingSheets.removeAt(0);
-      }
-      _pendingSheets.add(data);
-      return;
-    }
-    _presentSheet(data);
-  }
-
-  void _presentSheet(TransactionSavedData data) {
-    _isSheetShowing = true;
-    // The actual sheet display is delegated to the callback set in main.dart
-    // since we need a BuildContext to show a modal bottom sheet.
-    onSheetReadyToShow?.call(data, () {
-      _isSheetShowing = false;
-      // Show next queued sheet if any
-      if (_pendingSheets.isNotEmpty) {
-        final next = _pendingSheets.removeAt(0);
-        // Only present if still in foreground
-        if (_isInForeground) {
-          _presentSheet(next);
-        }
-      }
-    });
-  }
-
-  /// Callback that provides the sheet data and a dismiss callback.
-  void Function(TransactionSavedData data, VoidCallback onDismiss)? onSheetReadyToShow;
+  /// No popup is shown anymore — all pending transactions appear in
+  /// the Alerts screen where the user can review them in batch.
 
   /// Decode the raw event into a [Map].
   Map<String, dynamic>? _decodePayload(dynamic event) {

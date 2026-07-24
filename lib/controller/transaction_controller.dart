@@ -5,9 +5,13 @@ import 'package:flutter/foundation.dart';
 import '../data/services/analytics_service.dart';
 import '../data/local/transaction_db.dart';
 import '../data/models/transaction_model.dart';
+import '../automation/sms/services/sms_sync_service.dart';
 
 class TransactionController extends ChangeNotifier {
   List<Transaction> _transactions = [];
+
+  /// Shared SMS sync service used for auto-sync and pull-to-refresh.
+  final SmsSyncService smsSyncService = SmsSyncService();
 
   // Filter / search state
   String _searchQuery = '';

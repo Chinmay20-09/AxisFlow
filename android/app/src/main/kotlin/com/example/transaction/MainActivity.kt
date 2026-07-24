@@ -17,15 +17,19 @@ class MainActivity : FlutterActivity() {
     }
 
     private lateinit var smsEventChannel: SmsEventChannel
+    private lateinit var smsSyncPlugin: SmsSyncPlugin
     private var smsReceiver: SmsReceiver? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        Log.d(TAG, "[SMS] Setting up EventChannel")
+        Log.d(TAG, "[SMS] Setting up EventChannel and SmsSyncPlugin")
 
         smsEventChannel = SmsEventChannel(flutterEngine)
         smsEventChannel.setup()
+
+        smsSyncPlugin = SmsSyncPlugin(flutterEngine, applicationContext)
+        smsSyncPlugin.setup()
     }
 
     override fun onResume() {

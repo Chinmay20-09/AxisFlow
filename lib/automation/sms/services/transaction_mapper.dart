@@ -43,7 +43,7 @@ class TransactionMapper {
       note: _buildNote(result),
       category: defaultCategory,
       createdAt: timestamp,
-      state: TransactionState.completed,
+      state: TransactionStateHelper.defaultImportedState,
     );
   }
 

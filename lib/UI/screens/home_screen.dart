@@ -23,6 +23,11 @@ class HomeScreen extends StatelessWidget {
 
   HomeScreen({super.key, required this.controller});
 
+  Future<void> _onRefresh() async {
+    await controller.smsSyncService.sync();
+    controller.load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -49,29 +54,34 @@ class HomeScreen extends StatelessWidget {
             child: const Icon(Icons.add, color: AppColors.black),
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.lg,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  HomeHeader(controller: controller, scaffoldKey: _scaffoldKey),
-                  const SizedBox(height: AppSpacing.section),
-                  const _GreetingSection(),
-                  const SizedBox(height: AppSpacing.section),
-                  _TodayFlow(amount: analytics.todayNetFlow),
-                  const SizedBox(height: AppSpacing.section),
-                  InsightCard(message: analytics.summaryInsight),
-                  const SizedBox(height: AppSpacing.section),
-                  _WeeklyRhythm(
-                    weeklyData: weeklyData,
-                    dailyAverage: analytics.averageDailyExpense,
-                  ),
-                  const SizedBox(height: AppSpacing.section),
-                  _RecentActivity(transactions: recentTransactions),
-                ],
+            child: RefreshIndicator(
+              onRefresh: _onRefresh,
+              color: Theme.of(context).colorScheme.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HomeHeader(controller: controller, scaffoldKey: _scaffoldKey),
+                    const SizedBox(height: AppSpacing.section),
+                    const _GreetingSection(),
+                    const SizedBox(height: AppSpacing.section),
+                    _TodayFlow(amount: analytics.todayNetFlow),
+                    const SizedBox(height: AppSpacing.section),
+                    InsightCard(message: analytics.summaryInsight),
+                    const SizedBox(height: AppSpacing.section),
+                    _WeeklyRhythm(
+                      weeklyData: weeklyData,
+                      dailyAverage: analytics.averageDailyExpense,
+                    ),
+                    const SizedBox(height: AppSpacing.section),
+                    _RecentActivity(transactions: recentTransactions),
+                  ],
+                ),
               ),
             ),
           ),

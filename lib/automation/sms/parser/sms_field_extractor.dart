@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_print
 
+import '../models/processing_result.dart';
+
 /// Centralized field extraction from Indian bank SMS messages.
 ///
 /// **Why this class exists — design rationale:**
@@ -38,34 +40,123 @@
 /// - No side effects, no logging (logging happens at the orchestration layer).
 class SmsFieldExtractor {
   // ─────────────────────────────────────────────────────────────────────────
+  // Transaction type detection — MUST be called first
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Detect whether the SMS body describes a credit (income) or debit
+  /// transaction, or another type entirely (UPI, IMPS, ATM, etc.).
+  ///
+  /// **This is the single source of truth** for transaction-type detection.
+  /// [BankDetector.detectTransactionType] delegates to this method.
+  ///
+  /// Call this FIRST before any other extraction so that the rest of the
+  /// pipeline knows the direction of money flow from the start.
+  static BankTransactionType detectTransactionType(String body) {
+    final upper = body.toUpperCase();
+
+    // UPI / IMPS / NEFT / RTGS — payment rails (could be debit or credit)
+    if (upper.contains('UPI')) return BankTransactionType.upi;
+    if (upper.contains('IMPS')) return BankTransactionType.imps;
+    if (upper.contains('NEFT')) return BankTransactionType.neft;
+    if (upper.contains('RTGS')) return BankTransactionType.rtgs;
+
+    // ATM / withdrawal
+    if (upper.contains('ATM') ||
+        upper.contains('WITHDRAW') ||
+        upper.contains('CASH')) {
+      return BankTransactionType.atm;
+    }
+
+    // Card / POS / swipe
+    if (upper.contains('CARD') ||
+        upper.contains('POS') ||
+        upper.contains('SWIPE') ||
+        upper.contains('TAP')) {
+      return BankTransactionType.card;
+    }
+
+    // Wallet
+    if (upper.contains('WALLET') || upper.contains('PAYTM')) {
+      return BankTransactionType.wallet;
+    }
+
+    // ── Credit (income) — check before debit ――――――――――――――――――――――――――
+    if (upper.contains('CREDIT') ||
+        upper.contains('CREDITED') ||
+        upper.contains('RECEIVED') ||
+        upper.contains('DEPOSIT') ||
+        upper.contains('DEPOSITED')) {
+      return BankTransactionType.credit;
+    }
+
+    // ── Debit (spending) ――――――――――――――――――――――――――――――――――――――――――――
+    if (upper.contains('DEBIT') ||
+        upper.contains('DEBITED') ||
+        upper.contains('SPENT') ||
+        upper.contains('PAID') ||
+        upper.contains('TRANSFER')) {
+      return BankTransactionType.debit;
+    }
+
+    return BankTransactionType.unknown;
+  }
+  // ─────────────────────────────────────────────────────────────────────────
   // Amount extraction
   // ─────────────────────────────────────────────────────────────────────────
 
   /// Extract the transaction amount from an SMS body.
   ///
-  /// Tries each pattern family in priority order and returns the first match.
+  /// Optionally accepts [transactionType] (credit/debit) so that patterns
+  /// matching the known direction of money flow are tried first.
+  ///
+  /// Pattern priority order (when [transactionType] is provided):
+  /// 1. Currency-prefixed amounts (Rs., ₹, INR) — unambiguous
+  /// 2. Action phrases matching the known type ("credited by" for credit,
+  ///    "debited by" for debit)
+  /// 3. Account-specific actions matching the known type
+  /// 4. Fallback: all action patterns, spent/paid, amount keywords
+  ///
   /// Supports: Rs./₹/INR prefix, "debited/credited by/with", "spent/paid",
   /// "withdrawn", "A/C XXXX debited/credited by", "amount/amt" keywords.
-  static double? extractAmount(String body) {
+  static double? extractAmount(
+    String body, {
+    BankTransactionType transactionType = BankTransactionType.unknown,
+  }) {
     if (body.isEmpty) return null;
 
-    // Priority 1: Currency-prefixed amounts (Rs., ₹, INR)
+    // Priority 1: Currency-prefixed amounts — unambiguous regardless of type
     final currencyMatch = _extractCurrencyPrefixedAmount(body);
     if (currencyMatch != null) return currencyMatch;
 
-    // Priority 2: "debited/credited by/with" action phrases
+    if (transactionType != BankTransactionType.unknown) {
+      // Priority 2: Action phrase matching the KNOWN transaction direction
+      final knownActionMatch = _extractDirectionalActionAmount(
+        body,
+        isCredit: transactionType == BankTransactionType.credit,
+      );
+      if (knownActionMatch != null) return knownActionMatch;
+
+      // Priority 3: Account-specific action matching the known direction
+      final knownAccountMatch = _extractDirectionalAccountAmount(
+        body,
+        isCredit: transactionType == BankTransactionType.credit,
+      );
+      if (knownAccountMatch != null) return knownAccountMatch;
+    }
+
+    // Priority 4: All action phrases (either direction)
     final actionMatch = _extractActionAmount(body);
     if (actionMatch != null) return actionMatch;
 
-    // Priority 3: "A/C XXXX debited/credited by" account-specific
+    // Priority 5: Account-specific transactions
     final accountMatch = _extractAccountTransactionAmount(body);
     if (accountMatch != null) return accountMatch;
 
-    // Priority 4: "spent/paid/withdrawn" keywords
+    // Priority 6: Spent/paid/withdrawn (debit-only patterns)
     final spentMatch = _extractSpentWithdrawnAmount(body);
     if (spentMatch != null) return spentMatch;
 
-    // Priority 5: "amount/amt" keyword patterns
+    // Priority 7: Amount/amt keyword patterns
     final keywordMatch = _extractAmountKeyword(body);
     if (keywordMatch != null) return keywordMatch;
 
@@ -80,6 +171,33 @@ class SmsFieldExtractor {
           caseSensitive: false),
     ];
     return _tryAmountPatterns(body, patterns);
+  }
+
+  /// Matches only "credited by/with ..." (credit/income).
+  static double? _extractDirectionalActionAmount(
+    String body, {
+    required bool isCredit,
+  }) {
+    final verb = isCredit ? 'credited' : 'debited';
+    final pattern = RegExp(
+      '$verb\\s+(?:by|with)\\s*(?:Rs\\.?|₹|INR)?\\s*([\\d,]+(?:\\.\\d{1,2})?)',
+      caseSensitive: false,
+    );
+    return _tryAmountPatterns(body, [pattern]);
+  }
+
+  /// Matches only "A/C XXXX credited by ..." or "A/C XXXX debited by ..."
+  /// matching the known direction.
+  static double? _extractDirectionalAccountAmount(
+    String body, {
+    required bool isCredit,
+  }) {
+    final verb = isCredit ? 'credited' : 'debited';
+    final pattern = RegExp(
+      '(?:A/C|account|a/c)\\s+\\S+\\s+$verb\\s+by\\s*(?:Rs\\.?|₹|INR)?\\s*([\\d,]+(?:\\.\\d{1,2})?)',
+      caseSensitive: false,
+    );
+    return _tryAmountPatterns(body, [pattern]);
   }
 
   /// Matches "debited by 1500", "credited by 5000",
